@@ -1,11 +1,28 @@
 import { NextResponse } from "next/server";
 import { talentPoolSchema } from "@/lib/validators";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { sendEmail } from "@/lib/email/resend";
+import { talentPoolConfirmationEmail } from "@/lib/email/templates";
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json();
+    // Rate limit: 3 cadastros por IP a cada 10 min
+    const ip = getClientIp(request);
+    const rate = await checkRateLimit({
+      ip,
+      endpoint: "talent-pool",
+      maxRequests: 3,
+      windowSeconds: 10 * 60,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." },
+        { status: 429 }
+      );
+    }
 
+    const body = await request.json();
     const parsed = talentPoolSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -38,6 +55,19 @@ export async function POST(request: Request) {
         { status: 500 }
       );
     }
+
+    // Email de confirmação (fire-and-forget)
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+    const mail = talentPoolConfirmationEmail({
+      candidateName: parsed.data.full_name,
+      siteUrl,
+    });
+    void sendEmail({
+      to: parsed.data.email,
+      subject: mail.subject,
+      html: mail.html,
+    });
 
     return NextResponse.json(
       { message: "Cadastro realizado com sucesso" },

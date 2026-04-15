@@ -2,9 +2,31 @@ import { NextResponse } from "next/server";
 import { applicationSchema } from "@/lib/validators";
 import { MAX_RESUME_SIZE, ALLOWED_RESUME_TYPES } from "@/lib/constants";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { isPdfByMagic } from "@/lib/file-validation";
+import { sendEmail, RH_EMAIL } from "@/lib/email/resend";
+import {
+  applicationConfirmationEmail,
+  rhNewApplicationEmail,
+} from "@/lib/email/templates";
 
 export async function POST(request: Request) {
   try {
+    // Rate limit: 5 envios por IP a cada 15 min
+    const ip = getClientIp(request);
+    const rate = await checkRateLimit({
+      ip,
+      endpoint: "applications",
+      maxRequests: 5,
+      windowSeconds: 15 * 60,
+    });
+    if (!rate.ok) {
+      return NextResponse.json(
+        { error: "Muitas tentativas. Aguarde alguns minutos e tente novamente." },
+        { status: 429 }
+      );
+    }
+
     const formData = await request.formData();
 
     const data = {
@@ -54,6 +76,12 @@ export async function POST(request: Request) {
         { status: 400 }
       );
     }
+    if (!(await isPdfByMagic(resume))) {
+      return NextResponse.json(
+        { error: "Arquivo não parece ser um PDF válido" },
+        { status: 400 }
+      );
+    }
 
     const supabase = createServiceRoleClient();
 
@@ -96,6 +124,43 @@ export async function POST(request: Request) {
         { error: "Erro ao registrar candidatura" },
         { status: 500 }
       );
+    }
+
+    // Emails transacionais (fire-and-forget; nunca quebram a resposta)
+    const siteUrl =
+      process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
+
+    const { data: job } = await supabase
+      .from("jobs")
+      .select("title, id")
+      .eq("id", jobId)
+      .single();
+    const jobTitle = job?.title ?? "a vaga";
+
+    const confirmation = applicationConfirmationEmail({
+      candidateName: parsed.data.full_name,
+      jobTitle,
+      siteUrl,
+    });
+    void sendEmail({
+      to: parsed.data.email,
+      subject: confirmation.subject,
+      html: confirmation.html,
+    });
+
+    if (RH_EMAIL) {
+      const rhMail = rhNewApplicationEmail({
+        candidateName: parsed.data.full_name,
+        candidateEmail: parsed.data.email,
+        jobTitle,
+        adminUrl: `${siteUrl}/admin/vagas/${jobId}/candidaturas`,
+      });
+      void sendEmail({
+        to: RH_EMAIL,
+        subject: rhMail.subject,
+        html: rhMail.html,
+        replyTo: parsed.data.email,
+      });
     }
 
     return NextResponse.json(
