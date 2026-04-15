@@ -126,7 +126,7 @@ export function AdminApplicationsTable({ applications, jobs }: Props) {
       render: (a) =>
         a.resume_path ? (
           <a
-            href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/resumes/${a.resume_path}`}
+            href={`/api/admin/resumes?path=${encodeURIComponent(a.resume_path)}`}
             target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-1 text-xs font-semibold text-wt-primary hover:underline"

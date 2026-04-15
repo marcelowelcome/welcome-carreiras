@@ -113,7 +113,7 @@ export function CandidateCard({ application, onUpdate }: CandidateCardProps) {
               {/* CV */}
               {application.resume_path && (
                 <a
-                  href={`${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/authenticated/resumes/${application.resume_path}`}
+                  href={`/api/admin/resumes?path=${encodeURIComponent(application.resume_path)}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-2 rounded-lg border border-border px-4 py-2 text-sm text-primary hover:bg-gray-50"
