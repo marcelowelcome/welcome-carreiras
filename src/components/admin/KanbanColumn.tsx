@@ -16,9 +16,10 @@ interface KanbanColumnProps {
   stage: ApplicationStage;
   applications: Application[];
   onUpdate: () => void;
+  label?: string;
 }
 
-export function KanbanColumn({ stage, applications, onUpdate }: KanbanColumnProps) {
+export function KanbanColumn({ stage, applications, onUpdate, label }: KanbanColumnProps) {
   const { setNodeRef, isOver } = useDroppable({ id: stage });
 
   return (
@@ -37,7 +38,7 @@ export function KanbanColumn({ stage, applications, onUpdate }: KanbanColumnProp
             APPLICATION_STAGE_COLORS[stage]
           )}
         >
-          {APPLICATION_STAGE_LABELS[stage]}
+          {label ?? APPLICATION_STAGE_LABELS[stage]}
         </span>
         <span className="font-wt-heading text-xs font-bold text-wt-gray-500">
           {applications.length}

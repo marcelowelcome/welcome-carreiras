@@ -61,37 +61,34 @@ export function KanbanBoard({ initialApplications, jobId }: KanbanBoardProps) {
     }
   }
 
-  // Stages visiveis (reprovado fica por ultimo)
-  const visibleStages = APPLICATION_STAGES_ORDER.filter(
-    (s) => s !== "reprovado"
-  );
-  const hasReprovados = applications.some((a) => a.stage === "reprovado");
+  // Labels específicos do Kanban (override do global APPLICATION_STAGE_LABELS).
+  // "Triagem" vira "Phone Screen" só aqui.
+  const kanbanLabels: Partial<Record<ApplicationStage, string>> = {
+    triagem: "Phone Screen",
+  };
+
+  // Todas as etapas, reprovado sempre no final
+  const orderedStages: ApplicationStage[] = [
+    ...APPLICATION_STAGES_ORDER.filter((s) => s !== "reprovado"),
+    "reprovado",
+  ];
 
   return (
     <DndContext
       sensors={sensors}
       collisionDetection={closestCorners}
-
       onDragEnd={handleDragEnd}
     >
       <div className="flex gap-4 overflow-x-auto pb-4">
-        {visibleStages.map((stage) => (
+        {orderedStages.map((stage) => (
           <KanbanColumn
             key={stage}
             stage={stage}
+            label={kanbanLabels[stage]}
             applications={applications.filter((a) => a.stage === stage)}
             onUpdate={refreshApplications}
           />
         ))}
-
-        {/* Coluna de reprovados */}
-        {hasReprovados && (
-          <KanbanColumn
-            stage="reprovado"
-            applications={applications.filter((a) => a.stage === "reprovado")}
-            onUpdate={refreshApplications}
-          />
-        )}
       </div>
     </DndContext>
   );
