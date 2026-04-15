@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Briefcase,
   Users,
+  Inbox,
   Settings,
   LogOut,
   ChevronLeft,
@@ -16,6 +17,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/vagas", label: "Vagas", icon: Briefcase },
+  { href: "/admin/candidaturas", label: "Candidaturas", icon: Inbox },
   { href: "/admin/banco-de-talentos", label: "Banco de Talentos", icon: Users },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
