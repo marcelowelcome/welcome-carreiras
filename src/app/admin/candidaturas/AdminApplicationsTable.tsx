@@ -2,10 +2,11 @@
 
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import { Search, X, ExternalLink, FileText } from "lucide-react";
 import { DataTable } from "@/components/admin/DataTable";
 import type { Column } from "@/components/admin/DataTable";
+import { CandidateDrawer } from "@/components/admin/CandidateDrawer";
 import {
   BRAND_LABELS,
   BRAND_COLORS,
@@ -36,6 +37,7 @@ interface Props {
 export function AdminApplicationsTable({ applications, jobs }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [selected, setSelected] = useState<ApplicationWithJob | null>(null);
 
   const q = searchParams.get("q") ?? "";
   const vaga = searchParams.get("vaga") ?? "";
@@ -62,10 +64,16 @@ export function AdminApplicationsTable({ applications, jobs }: Props) {
       key: "candidate",
       header: "Candidato",
       render: (a) => (
-        <div>
-          <p className="font-medium text-wt-teal-deep">{a.full_name}</p>
+        <button
+          type="button"
+          onClick={() => setSelected(a)}
+          className="text-left"
+        >
+          <p className="font-medium text-wt-teal-deep hover:text-wt-primary">
+            {a.full_name}
+          </p>
           <p className="text-xs text-wt-gray-500">{a.email}</p>
-        </div>
+        </button>
       ),
     },
     {
@@ -216,6 +224,18 @@ export function AdminApplicationsTable({ applications, jobs }: Props) {
         data={applications}
         emptyMessage="Nenhuma candidatura encontrada"
       />
+
+      {selected && (
+        <CandidateDrawer
+          application={selected}
+          open={true}
+          onClose={() => setSelected(null)}
+          onUpdate={() => {
+            setSelected(null);
+            router.refresh();
+          }}
+        />
+      )}
     </div>
   );
 }
