@@ -1,33 +1,39 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
-  try {
-    const supabase = await createServerClient();
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
+  const supabase = createServiceRoleClient();
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status");
 
-    let query = supabase
-      .from("jobs")
-      .select("*, applications(count)")
-      .order("created_at", { ascending: false });
+  let query = supabase
+    .from("jobs")
+    .select("*, applications(count)")
+    .order("created_at", { ascending: false });
 
-    if (status) {
-      query = query.eq("status", status);
-    }
+  if (status) query = query.eq("status", status);
 
-    const { data, error } = await query;
-
-    if (error) throw error;
-
-    return NextResponse.json({ data });
-  } catch (error) {
-    console.error("[API] Erro ao listar vagas:", error);
-    return NextResponse.json(
-      { error: "Erro interno" },
-      { status: 500 }
-    );
+  const { data, error } = await query;
+  if (error) {
+    console.error("[API] list jobs:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
+  return NextResponse.json({ data });
+}
+
+export async function POST(request: Request) {
+  const payload = await request.json();
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase
+    .from("jobs")
+    .insert(payload)
+    .select("id")
+    .single();
+  if (error) {
+    console.error("[API] create job:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+  return NextResponse.json({ data });
 }

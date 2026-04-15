@@ -10,7 +10,6 @@ import {
 } from "@dnd-kit/core";
 import type { DragEndEvent } from "@dnd-kit/core";
 import { KanbanColumn } from "./KanbanColumn";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { APPLICATION_STAGES_ORDER } from "@/lib/constants";
 import type { Application, ApplicationStage } from "@/types";
 
@@ -26,18 +25,16 @@ export function KanbanBoard({ initialApplications, jobId }: KanbanBoardProps) {
   );
 
   const refreshApplications = useCallback(async () => {
-    const supabase = createBrowserClient();
-    const { data } = await supabase
-      .from("applications")
-      .select("*")
-      .eq("job_id", jobId)
-      .order("stage_updated_at", { ascending: false });
-    if (data) setApplications(data as Application[]);
+    const res = await fetch(`/api/admin/applications?job_id=${jobId}`, {
+      cache: "no-store",
+    });
+    if (!res.ok) return;
+    const { data } = (await res.json()) as { data: Application[] };
+    if (data) setApplications(data);
   }, [jobId]);
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-
     if (!over) return;
 
     const appId = active.id as string;
@@ -48,25 +45,20 @@ export function KanbanBoard({ initialApplications, jobId }: KanbanBoardProps) {
 
     // Optimistic update
     setApplications((prev) =>
-      prev.map((a) =>
-        a.id === appId ? { ...a, stage: newStage } : a
-      )
+      prev.map((a) => (a.id === appId ? { ...a, stage: newStage } : a))
     );
 
-    const supabase = createBrowserClient();
-    await supabase
-      .from("applications")
-      .update({
-        stage: newStage,
-        stage_updated_at: new Date().toISOString(),
-      })
-      .eq("id", appId);
-
-    await supabase.from("stage_history").insert({
-      application_id: appId,
-      from_stage: app.stage,
-      to_stage: newStage,
+    const res = await fetch(`/api/admin/applications/${appId}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ stage: newStage }),
     });
+    if (!res.ok) {
+      // Rollback em caso de erro
+      setApplications((prev) =>
+        prev.map((a) => (a.id === appId ? { ...a, stage: app.stage } : a))
+      );
+    }
   }
 
   // Stages visiveis (reprovado fica por ultimo)

@@ -12,7 +12,6 @@ import {
   JOB_STATUS_COLORS,
 } from "@/lib/constants";
 import { cn, formatDate } from "@/lib/utils";
-import { createBrowserClient } from "@/lib/supabase/client";
 
 interface JobRow {
   id: string;
@@ -34,40 +33,43 @@ export function AdminJobsTable({ jobs }: AdminJobsTableProps) {
   async function handleDelete(id: string, title: string) {
     if (!confirm(`Deseja encerrar a vaga "${title}"?`)) return;
 
-    const supabase = createBrowserClient();
-    await supabase.from("jobs").update({ status: "closed" }).eq("id", id);
+    await fetch(`/api/admin/jobs/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: "closed" }),
+    });
     router.refresh();
   }
 
   async function handleDuplicate(id: string) {
-    const supabase = createBrowserClient();
-    const { data: job } = await supabase
-      .from("jobs")
-      .select("*")
-      .eq("id", id)
-      .single();
-
+    const res = await fetch(`/api/admin/jobs/${id}`);
+    if (!res.ok) return;
+    const { data: job } = (await res.json()) as { data: Record<string, unknown> };
     if (!job) return;
 
-    await supabase.from("jobs").insert({
-      title: job.title,
-      brand: job.brand,
-      department: job.department,
-      location: job.location,
-      work_model: job.work_model,
-      contract_type: job.contract_type,
-      salary_range: job.salary_range,
-      description: job.description,
-      responsibilities: job.responsibilities,
-      requirements_must: job.requirements_must,
-      requirements_nice: job.requirements_nice,
-      benefits: job.benefits,
-      process_steps: job.process_steps,
-      closes_at: job.closes_at,
-      slug: `${job.slug}-copia-${Date.now()}`,
-      status: "draft",
-      is_featured: false,
-      published_at: null,
+    await fetch("/api/admin/jobs", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        title: job.title,
+        brand: job.brand,
+        department: job.department,
+        location: job.location,
+        work_model: job.work_model,
+        contract_type: job.contract_type,
+        salary_range: job.salary_range,
+        description: job.description,
+        responsibilities: job.responsibilities,
+        requirements_must: job.requirements_must,
+        requirements_nice: job.requirements_nice,
+        benefits: job.benefits,
+        process_steps: job.process_steps,
+        closes_at: job.closes_at,
+        slug: `${job.slug}-copia-${Date.now()}`,
+        status: "draft",
+        is_featured: false,
+        published_at: null,
+      }),
     });
 
     router.refresh();

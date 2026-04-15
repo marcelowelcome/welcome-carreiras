@@ -11,7 +11,6 @@ import {
   CONTRACT_TYPE_LABELS,
 } from "@/lib/constants";
 import { slugify } from "@/lib/utils";
-import { createBrowserClient } from "@/lib/supabase/client";
 import { SimpleEditor } from "@/components/ui/SimpleEditor";
 import type { Job, ProcessStep } from "@/types";
 
@@ -90,8 +89,6 @@ export function JobFormEditor({ job }: JobFormEditorProps) {
     setLoading(true);
 
     try {
-      const supabase = createBrowserClient();
-
       const payload = {
         ...result.data,
         salary_range: result.data.salary_range || null,
@@ -103,15 +100,17 @@ export function JobFormEditor({ job }: JobFormEditorProps) {
         slug: isEditing ? job.slug : slugify(result.data.title),
       };
 
-      if (isEditing) {
-        const { error } = await supabase
-          .from("jobs")
-          .update(payload)
-          .eq("id", job.id);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase.from("jobs").insert(payload);
-        if (error) throw error;
+      const url = isEditing ? `/api/admin/jobs/${job.id}` : "/api/admin/jobs";
+      const method = isEditing ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) {
+        const { error } = await res.json().catch(() => ({ error: "erro" }));
+        throw new Error(error);
       }
 
       router.push("/admin/vagas");

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const supabase = await createServerClient();
+    const supabase = createServiceRoleClient();
 
     const [jobsResult, applicationsResult, talentResult] = await Promise.all([
       supabase.from("jobs").select("status"),

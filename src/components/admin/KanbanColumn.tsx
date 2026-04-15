@@ -25,23 +25,21 @@ export function KanbanColumn({ stage, applications, onUpdate }: KanbanColumnProp
     <div
       ref={setNodeRef}
       className={cn(
-        "flex w-72 flex-shrink-0 flex-col rounded-xl border border-border bg-gray-50 transition-colors",
-        isOver && "border-accent bg-accent/5"
+        "flex w-72 flex-shrink-0 flex-col rounded-wt-md bg-wt-gray-100/60 transition-colors",
+        isOver && "bg-wt-primary-light ring-2 ring-wt-primary"
       )}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3">
-        <div className="flex items-center gap-2">
-          <span
-            className={cn(
-              "inline-block rounded-full px-2.5 py-0.5 text-xs font-medium",
-              APPLICATION_STAGE_COLORS[stage]
-            )}
-          >
-            {APPLICATION_STAGE_LABELS[stage]}
-          </span>
-        </div>
-        <span className="text-xs font-medium text-muted">
+        <span
+          className={cn(
+            "inline-block rounded-full px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-[0.06em]",
+            APPLICATION_STAGE_COLORS[stage]
+          )}
+        >
+          {APPLICATION_STAGE_LABELS[stage]}
+        </span>
+        <span className="font-wt-heading text-xs font-bold text-wt-gray-500">
           {applications.length}
         </span>
       </div>
@@ -58,7 +56,7 @@ export function KanbanColumn({ stage, applications, onUpdate }: KanbanColumnProp
         </SortableContext>
 
         {applications.length === 0 && (
-          <p className="py-8 text-center text-xs text-gray-400">
+          <p className="py-8 text-center text-xs text-wt-gray-500">
             Nenhum candidato
           </p>
         )}
