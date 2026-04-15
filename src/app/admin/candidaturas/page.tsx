@@ -26,24 +26,43 @@ export default async function AdminCandidaturasPage({ searchParams }: PageProps)
   // Middleware já protege /admin. Usamos service role para evitar RLS no read.
   const supabase = createServiceRoleClient();
 
+  // Duas queries independentes — evita qualquer particularidade do JOIN
+  // embutido do PostgREST que estava dropando linhas silenciosamente.
   let query = supabase
     .from("applications")
-    .select(
-      "*, jobs(id, title, brand)"
-    )
+    .select("*")
     .order("created_at", { ascending: false });
 
   if (params.etapa) {
     query = query.eq("stage", params.etapa);
   }
 
-  const { data, error } = await query;
-  if (error) {
-    console.error("[admin/candidaturas] supabase:", error);
-  }
-  let applications = (data ?? []) as ApplicationWithJob[];
+  const [appsResult, jobsResult] = await Promise.all([
+    query,
+    supabase.from("jobs").select("id, title, brand").order("title"),
+  ]);
 
-  // Filtros client-side (sobre campos aninhados / full-text simples)
+  if (appsResult.error) {
+    console.error("[admin/candidaturas] applications:", appsResult.error);
+  }
+  if (jobsResult.error) {
+    console.error("[admin/candidaturas] jobs:", jobsResult.error);
+  }
+
+  const rawApps = (appsResult.data ?? []) as Application[];
+  const jobsById = new Map(
+    (jobsResult.data ?? []).map((j) => [
+      j.id as string,
+      { id: j.id as string, title: j.title as string, brand: j.brand as Brand },
+    ])
+  );
+
+  let applications: ApplicationWithJob[] = rawApps.map((a) => ({
+    ...a,
+    jobs: jobsById.get(a.job_id) ?? null,
+  }));
+
+  // Filtros aplicados depois do merge
   if (params.vaga) {
     applications = applications.filter((a) => a.jobs?.id === params.vaga);
   }
@@ -59,11 +78,10 @@ export default async function AdminCandidaturasPage({ searchParams }: PageProps)
     );
   }
 
-  // Lista de vagas para o filtro (só as que têm candidaturas)
-  const { data: jobsForFilter } = await supabase
-    .from("jobs")
-    .select("id, title")
-    .order("title");
+  const jobsForFilter = Array.from(jobsById.values()).map(({ id, title }) => ({
+    id,
+    title,
+  }));
 
   return (
     <div>
@@ -82,7 +100,7 @@ export default async function AdminCandidaturasPage({ searchParams }: PageProps)
       <div className="mt-8">
         <AdminApplicationsTable
           applications={applications}
-          jobs={jobsForFilter ?? []}
+          jobs={jobsForFilter}
         />
       </div>
     </div>
