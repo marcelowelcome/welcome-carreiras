@@ -1,5 +1,5 @@
 import { notFound } from "next/navigation";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { JobFormEditor } from "@/components/admin/JobFormEditor";
 import type { Job } from "@/types";
 
@@ -9,7 +9,7 @@ interface PageProps {
 
 export default async function EditarVagaPage({ params }: PageProps) {
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
 
   const { data: job } = await supabase
     .from("jobs")

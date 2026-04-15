@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { AdminApplicationsTable } from "./AdminApplicationsTable";
 import type { Application, ApplicationStage, Brand } from "@/types";
 
@@ -23,7 +23,8 @@ type ApplicationWithJob = Application & {
 
 export default async function AdminCandidaturasPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const supabase = await createServerClient();
+  // Middleware já protege /admin. Usamos service role para evitar RLS no read.
+  const supabase = createServiceRoleClient();
 
   let query = supabase
     .from("applications")

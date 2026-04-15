@@ -1,4 +1,4 @@
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { TalentPoolTable } from "./TalentPoolTable";
 import type { TalentPoolEntry, Brand, Department } from "@/types";
 
@@ -16,7 +16,8 @@ export default async function AdminBancoDeTalentosPage({
   searchParams,
 }: PageProps) {
   const params = await searchParams;
-  const supabase = await createServerClient();
+  // Middleware já protege /admin. Usamos service role para evitar RLS no read.
+  const supabase = createServiceRoleClient();
 
   const { data } = await supabase
     .from("talent_pool")

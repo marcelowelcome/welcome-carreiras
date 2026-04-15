@@ -1,9 +1,9 @@
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { CultureEditor } from "./CultureEditor";
 import type { CultureContent } from "@/types";
 
 export default async function CulturaAdminPage() {
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
   const { data } = await supabase
     .from("culture_content")
     .select("*")

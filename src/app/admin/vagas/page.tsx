@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { Plus } from "lucide-react";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { AdminJobsTable } from "./AdminJobsTable";
 
 export default async function AdminVagasPage() {
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
 
   const { data: jobs } = await supabase
     .from("jobs")

@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { KanbanBoard } from "@/components/admin/KanbanBoard";
 import type { Application } from "@/types";
 
@@ -11,7 +11,7 @@ interface PageProps {
 
 export default async function CandidaturasPage({ params }: PageProps) {
   const { id } = await params;
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
 
   const { data: job } = await supabase
     .from("jobs")

@@ -1,9 +1,9 @@
 import { Briefcase, Users, UserCheck, Clock } from "lucide-react";
 import { StatsCard } from "@/components/admin/StatsCard";
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
 async function getDashboardStats() {
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
 
   const [jobsResult, applicationsResult, talentResult] = await Promise.all([
     supabase.from("jobs").select("status"),

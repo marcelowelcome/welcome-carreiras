@@ -1,9 +1,9 @@
-import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { TestimonialsAdmin } from "./TestimonialsAdmin";
 import type { Testimonial } from "@/types";
 
 export default async function DepoimentosAdminPage() {
-  const supabase = await createServerClient();
+  const supabase = createServiceRoleClient();
   const { data } = await supabase
     .from("testimonials")
     .select("*")
