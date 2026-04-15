@@ -5,6 +5,8 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { KanbanBoard } from "@/components/admin/KanbanBoard";
 import type { Application } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
@@ -21,11 +23,14 @@ export default async function CandidaturasPage({ params }: PageProps) {
 
   if (!job) notFound();
 
-  const { data: applications } = await supabase
+  const { data: applications, error } = await supabase
     .from("applications")
     .select("*")
     .eq("job_id", id)
     .order("stage_updated_at", { ascending: false });
+  if (error) {
+    console.error("[admin/vagas/[id]/candidaturas] supabase:", error);
+  }
 
   return (
     <div>

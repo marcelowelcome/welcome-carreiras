@@ -19,10 +19,13 @@ export default async function AdminBancoDeTalentosPage({
   // Middleware já protege /admin. Usamos service role para evitar RLS no read.
   const supabase = createServiceRoleClient();
 
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("talent_pool")
     .select("*")
     .order("created_at", { ascending: false });
+  if (error) {
+    console.error("[admin/banco-de-talentos] supabase:", error);
+  }
 
   let entries = (data ?? []) as TalentPoolEntry[];
 

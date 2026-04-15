@@ -3,13 +3,18 @@ import { Plus } from "lucide-react";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { AdminJobsTable } from "./AdminJobsTable";
 
+export const dynamic = "force-dynamic";
+
 export default async function AdminVagasPage() {
   const supabase = createServiceRoleClient();
 
-  const { data: jobs } = await supabase
+  const { data: jobs, error } = await supabase
     .from("jobs")
     .select("*, applications(count)")
     .order("created_at", { ascending: false });
+  if (error) {
+    console.error("[admin/vagas] supabase:", error);
+  }
 
   return (
     <div>

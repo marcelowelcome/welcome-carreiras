@@ -2,6 +2,8 @@ import { Briefcase, Users, UserCheck, Clock } from "lucide-react";
 import { StatsCard } from "@/components/admin/StatsCard";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
+export const dynamic = "force-dynamic";
+
 async function getDashboardStats() {
   const supabase = createServiceRoleClient();
 
@@ -10,6 +12,12 @@ async function getDashboardStats() {
     supabase.from("applications").select("stage"),
     supabase.from("talent_pool").select("id", { count: "exact", head: true }),
   ]);
+
+  if (jobsResult.error) console.error("[admin/dashboard] jobs:", jobsResult.error);
+  if (applicationsResult.error)
+    console.error("[admin/dashboard] applications:", applicationsResult.error);
+  if (talentResult.error)
+    console.error("[admin/dashboard] talent:", talentResult.error);
 
   const jobs = jobsResult.data ?? [];
   const applications = applicationsResult.data ?? [];

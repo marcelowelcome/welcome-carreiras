@@ -37,7 +37,10 @@ export default async function AdminCandidaturasPage({ searchParams }: PageProps)
     query = query.eq("stage", params.etapa);
   }
 
-  const { data } = await query;
+  const { data, error } = await query;
+  if (error) {
+    console.error("[admin/candidaturas] supabase:", error);
+  }
   let applications = (data ?? []) as ApplicationWithJob[];
 
   // Filtros client-side (sobre campos aninhados / full-text simples)
