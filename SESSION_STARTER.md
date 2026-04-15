@@ -6,13 +6,13 @@
 
 ## Status atual (Abril 2026)
 
-**Sprint 1 concluída** — portal público (home, /vagas, /vagas/[slug], /cultura, /banco-de-talentos) e admin completo (dashboard, vagas CRUD, Kanban por vaga, lista global de candidaturas, banco de talentos, configurações de cultura/depoimentos). Estética Welcome Trips aplicada como linguagem visual global. Reads do admin via service role; writes via `/api/admin/*`. CVs abertos via signed URL do Supabase Storage.
+**Sprint 1 ✅** — portal público (home, /vagas, /vagas/[slug], /cultura, /banco-de-talentos) e admin completo (dashboard, vagas CRUD, Kanban por vaga, lista global de candidaturas, banco de talentos, configurações de cultura/depoimentos). Estética Welcome Trips aplicada como linguagem visual global. Reads do admin via service role; writes via `/api/admin/*`. CVs abertos via signed URL do Supabase Storage.
 
-**Sprint 2 concluída** — entrevistas estruturadas (Bar Raiser + 3 Pares + Painel de Decisão com voto e pilares BeWelcome), e-mails transacionais via Resend (candidato + RH + talent pool), rate limit por IP via tabela `rate_limit_log` no Supabase, validação de upload por magic bytes (`%PDF-`).
+**Sprint 2 ✅** — entrevistas estruturadas (Bar Raiser + 3 Pares + Painel de Decisão com voto e pilares BeWelcome), e-mails transacionais via Resend (candidato + RH + talent pool), rate limit por IP via tabela `rate_limit_log` no Supabase, validação de upload por magic bytes (`%PDF-`).
 
-**Pendente na Sprint 2:** LGPD Fase 2 — página `/meus-dados` para o candidato visualizar e solicitar exclusão.
+**Sprint 3 ✅** — home reformulada (Counters animados, Manifesto, Verticais, Carrossel de benefícios, vídeo institucional), OG images dinâmicas por vaga, LGPD Fase 2 (`/meus-dados` público + `/admin/lgpd` para resolver pedidos de exclusão com delete em cadeia de applications + talent_pool + CVs no Storage).
 
-**Onde começar na Sprint 3:** ver seção "Sprints em aberto" ao final deste arquivo.
+**Onde começar a próxima sessão:** Sprint 4 — ver seção "Sprints em aberto" ao final.
 
 ---
 
@@ -239,22 +239,106 @@ Use @dnd-kit/core e @dnd-kit/sortable. Siga AGENT_INSTRUCTIONS.md para padrões.
 
 ## Sprints em aberto
 
-### Sprint 3 — Conteúdo real, marca e LGPD
+> Roadmap planejado após Sprint 3. Cada sprint é autocontida — pode ser reordenada conforme prioridade de negócio, mas cada bloco já vem com dependências explicitadas (assets vs código vs integração externa).
 
-Objetivo: transformar o portal genérico em algo que represente visualmente o Welcome Group e atender a LGPD Fase 2.
+---
 
-1. Substituir seed por **vagas reais**, **depoimentos reais** (com fotos) e **números reais** (home `NumbersGrid`).
-2. Trocar o textual "Welcome Carreiras" pelo **logo oficial** do grupo em `Nav` e `Footer`.
-3. **Marca-d'água do mapa-múndi** (§7 do DESIGN_SYSTEM_WELCOME_TRIPS) em backgrounds-chave (hero home, CTA final).
-4. **OG images dinâmicas por vaga** (`/vagas/[slug]/opengraph-image.tsx`) + metadados sociais completos.
-5. **Foto da equipe** na home em composição circular (§6 do design system).
-6. **LGPD Fase 2:** página `/meus-dados` onde o candidato consulta dados próprios via e-mail + token e solicita exclusão. Endpoint `POST /api/lgpd/delete-request` registra pedido; admin trata em `/admin/lgpd`.
+### Sprint 4 — Analytics & conversão
 
-### Sprint 4 — Analytics e integrações externas
+**Objetivo:** medir o funil real e parar de operar no escuro. Hoje não sabemos quantas pessoas veem uma vaga vs iniciam o form vs submetem.
 
-1. GA4 (`NEXT_PUBLIC_GA_ID`) + eventos do funil (ver vaga → iniciar form → submeter).
-2. ActiveCampaign: candidato do banco de talentos entra em lista de nutrição.
-3. WhatsApp: notificar candidato em mudanças de etapa críticas (entrevista agendada, oferta, reprovação).
-4. ClickUp: criar task automática por nova candidatura.
-5. Slack webhook: canal `#carreiras` recebe ping por nova candidatura.
+1. **GA4 no layout root** — tag via `next/third-parties` (`GoogleAnalytics`), `NEXT_PUBLIC_GA_ID` já previsto no `.env.example`. Carregar só em produção.
+2. **Eventos de funil** (ambos web + GA4):
+   - `view_job` (dispara em `/vagas/[slug]`, com `job_id`, `brand`, `department`)
+   - `start_application` (primeiro focus no form)
+   - `submit_application` (após 201 do `/api/applications`)
+   - `submit_talent_pool` (após 201 do `/api/talent-pool`)
+   - `play_institutional_video` (primeiro play do YouTube)
+   - `lgpd_request_submitted`
+3. **UTM tracking** persistido em `applications.referral_source_raw` (nova coluna TEXT nullable): captura `utm_source`/`utm_medium`/`utm_campaign` da URL de origem, guarda cru pra reconciliar depois. Migration 006.
+4. **Dashboard de funil** em `/admin/insights` (novo) — 4 stats cards: view→start rate, start→submit rate, top marca/vaga do mês, tempo médio até contratação (usa `stage_history`).
+5. **Microsoft Clarity** (opcional, grátis) pra session replay e heatmap — útil pra entender UX da página de vaga.
+
+**Dependências externas:** conta GA4 + Clarity (gratuitos), você cria e me passa os IDs.
+**Código/migration:** 006_utm_tracking.sql; layout.tsx; src/lib/analytics.ts; `/admin/insights`.
+**Estimativa:** 1 sessão.
+
+---
+
+### Sprint 5 — Integrações externas (RH automatizado)
+
+**Objetivo:** conectar o portal ao ecossistema que o grupo já usa, para que cada candidatura vire ação em cadeia sem intervenção manual.
+
+1. **Slack webhook** — canal `#carreiras` recebe mensagem estruturada (nome, vaga, marca, link para o Kanban) a cada `POST /api/applications`. Simples, zero custo, maior impacto operacional imediato.
+2. **ActiveCampaign**:
+   - Novo cadastro no banco de talentos → contato criado com tag `talent-pool-<marca>`.
+   - Candidatura → contato com tag `candidato-<marca>`.
+   - Helper `src/lib/integrations/activecampaign.ts` (fire-and-forget, no-op se env ausente).
+3. **ClickUp** — task automática no espaço de RH por candidatura recebida, com link para o admin. Igual ao Slack em padrão fire-and-forget.
+4. **WhatsApp transacional** — notificar candidato em eventos-chave:
+   - Confirmação de candidatura recebida (duplica o e-mail)
+   - Entrevista agendada (gatilho manual do RH no drawer)
+   - Oferta / reprovação
+   - Provedor: API oficial do WhatsApp Business via parceiro como Twilio ou Zenvia. Exige domínio validado e template aprovado pela Meta.
+5. **Google Calendar** (stretch) — botão no drawer "Agendar entrevista" cria evento, anexa candidato por e-mail, guarda link no `interviews.notes`.
+
+**Dependências externas:**
+- Webhook URL do Slack (você cria no workspace)
+- API key ActiveCampaign + URL da conta
+- API token ClickUp + ID do workspace/espaço
+- Conta Twilio/Zenvia + template WhatsApp aprovado pela Meta (2-5 dias úteis de aprovação)
+- OAuth Google Calendar (mais complexo, pode ficar como Sprint 6)
+
+**Código:** `src/lib/integrations/{slack,activecampaign,clickup,whatsapp}.ts`; gatilhos em `POST /api/applications`, `POST /api/talent-pool`, `PATCH /api/admin/applications/[id]` (quando stage muda).
+**Estimativa:** 2 sessões (uma só Slack+AC+ClickUp, outra só WhatsApp).
+
+---
+
+### Sprint 6 — Identidade visual oficial
+
+**Objetivo:** substituir placeholders textuais por identidade oficial do grupo. Depende 100% de assets enviados por você.
+
+1. **Logo oficial** (SVG preferível, PNG@2x aceitável) — substitui "Welcome Carreiras" em `Nav` e `Footer`. Dois arquivos: versão escura (para header off-white) e clara (para footer teal-deep).
+2. **Favicon e app icon** — gerar `favicon.ico`, `apple-touch-icon.png`, `icon.png` a partir do logo.
+3. **Marca-d'água mapa-múndi** — SVG outline com opacity ~3-5% no background do hero home e seção final CTA (§7 do design system).
+4. **OG image do site root** — `src/app/opengraph-image.tsx` com a wordmark + marca-d'água, usada quando compartilharem a home ou qualquer página sem OG próprio.
+5. **Foto de equipe real** — se tivermos fotos em alta, substituir `Quem-Somos.png` ou adicionar uma composição circular extra (§6 do design system).
+6. **Conteúdo real:**
+   - Substituir 4 vagas seed por vagas abertas reais.
+   - Substituir 3 depoimentos seed por depoimentos reais (nome, cargo, foto, quote).
+   - Atualizar `CountersStrip` com números reais (colaboradores, anos, destinos, eventos).
+7. **Domínio verificado no Resend** — permite enviar de `carreiras@welcomegroup.com.br` em vez de `onboarding@resend.dev`.
+
+**Dependências externas:** 100% assets seus. Nenhum código complexo, só wiring.
+**Estimativa:** 1 sessão após você enviar os assets.
+
+---
+
+### Sprint 7 — Qualidade, observabilidade e acessibilidade
+
+**Objetivo:** antes de publicar agressivamente no LinkedIn/campanhas, garantir que o portal aguenta tráfego real e atende WCAG 2.1 AA.
+
+1. **Testes e2e com Playwright** — jornada-ouro do candidato (home → vaga → form → submit) e jornada-ouro do RH (login → abrir candidatura → mover etapa → adicionar entrevista). 6-8 specs.
+2. **Sentry** — captura de erros frontend e backend; alerta em #carreiras quando erros novos.
+3. **Uptime monitoring** — Better Stack ou UptimeRobot pingando `/` e `/api/applications` (health check).
+4. **Auditoria de acessibilidade** — rodar `axe` no CI; corrigir contraste de placeholders, labels faltando, foco visível.
+5. **Core Web Vitals** — rodar `lighthouse-ci` no deploy; meta LCP < 2.5s, CLS < 0.1, INP < 200ms.
+6. **SEO final** — `robots.txt` (já ok), sitemap (já ok), verificar indexação no Google Search Console.
+7. **Backup automatizado** — Supabase Pro tem PITR; se ainda não estiver no plano, configurar export semanal via GitHub Actions.
+
+**Dependências externas:** conta Sentry (grátis até 5k events/mês), Better Stack ou UptimeRobot.
+**Estimativa:** 1-2 sessões.
+
+---
+
+### Backlog de ideias (sem compromisso de sprint)
+
+- **Publicação automática em job boards:** LinkedIn Jobs API, Indeed, Gupy — a partir de uma vaga publicada aqui, espelhar automaticamente.
+- **Programa de indicação:** colaborador do grupo indica candidato com link com tracking. Gera tag + eventualmente bônus.
+- **Relatórios PDF:** gerar PDF de candidatura para compartilhar com gestor offline (jsPDF ou puppeteer server-side).
+- **Diversidade & inclusão dashboard:** métricas de gênero/raça (com consentimento opt-in no form) agregadas no admin, sem expor individualmente.
+- **Self-service para gestores de área:** permissão granular — gestor de tech vê só candidaturas de vagas tech; admin vê tudo. Exige refinamento de RLS ou scoping por claim JWT.
+- **Feed de cultura pública** — /cultura com posts curtos tipo microblog (bastidores, eventos do time).
+- **Salário por faixa anonimizada** — mostrar range médio por cargo baseado em dados internos (quando houver massa).
+- **Onboarding pós-contratação:** estender `/admin` com fluxo de onboarding para contratados.
 6. **Documente decisões.** Se algo mudar em relação ao planejado, atualize ARCHITECTURE.md imediatamente.
