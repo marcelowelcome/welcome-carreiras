@@ -7,6 +7,7 @@ import {
   Briefcase,
   Users,
   Inbox,
+  Shield,
   Settings,
   LogOut,
   ChevronLeft,
@@ -19,6 +20,7 @@ const NAV_ITEMS = [
   { href: "/admin/vagas", label: "Vagas", icon: Briefcase },
   { href: "/admin/candidaturas", label: "Candidaturas", icon: Inbox },
   { href: "/admin/banco-de-talentos", label: "Banco de Talentos", icon: Users },
+  { href: "/admin/lgpd", label: "LGPD", icon: Shield },
   { href: "/admin/configuracoes", label: "Configurações", icon: Settings },
 ];
 

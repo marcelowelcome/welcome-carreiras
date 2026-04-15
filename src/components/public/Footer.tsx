@@ -62,9 +62,17 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 border-t border-white/15 pt-6 text-center text-xs text-white/55">
-          &copy; {new Date().getFullYear()} Welcome Group. Todos os direitos
-          reservados. Curitiba, PR.
+        <div className="mt-12 flex flex-col items-center gap-3 border-t border-white/15 pt-6 text-center text-xs text-white/55 sm:flex-row sm:justify-between sm:text-left">
+          <p>
+            &copy; {new Date().getFullYear()} Welcome Group. Todos os direitos
+            reservados. Curitiba, PR.
+          </p>
+          <Link
+            href="/meus-dados"
+            className="text-white/70 transition-colors hover:text-wt-yellow"
+          >
+            Meus dados (LGPD)
+          </Link>
         </div>
       </div>
     </footer>

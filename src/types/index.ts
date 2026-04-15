@@ -159,6 +159,22 @@ export interface Interview {
   updated_at: string;
 }
 
+export type LgpdRequestType = "exclusao" | "acesso";
+export type LgpdRequestStatus = "pendente" | "resolvido" | "cancelado";
+
+export interface LgpdRequest {
+  id: string;
+  email: string;
+  request_type: LgpdRequestType;
+  reason: string | null;
+  status: LgpdRequestStatus;
+  ip: string | null;
+  resolved_by: string | null;
+  resolved_note: string | null;
+  resolved_at: string | null;
+  created_at: string;
+}
+
 export interface CultureContent {
   id: string;
   section_key: string;
