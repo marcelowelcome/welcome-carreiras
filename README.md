@@ -1,36 +1,64 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Portal de Carreiras — Welcome Group
 
-## Getting Started
+Aplicação Next.js que centraliza as vagas, cultura e banco de talentos das marcas do Welcome Group (Weddings, Trips, WelConnect, Corporativo). Inclui um backoffice completo para RH operar o processo seletivo com Kanban, avaliações por etapa, entrevistas estruturadas (Bar Raiser + Pares + Painel) e pontuação em pilares de cultura BeWelcome.
 
-First, run the development server:
+## Stack
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+- **Next.js 14** (App Router, Server Components por padrão)
+- **TypeScript** estrito
+- **Supabase** (PostgreSQL + Auth + Storage)
+- **Tailwind CSS** com tokens do design system **Welcome Trips** (ver `DESIGN_SYSTEM_WELCOME_TRIPS.md`)
+- **Resend** para e-mails transacionais
+- **Vercel** para deploy
+
+## Estrutura do repositório
+
+```
+.
+├── src/                             # Código da aplicação Next.js
+│   ├── app/                          # App Router (público + /admin + /api)
+│   ├── components/{public,admin,ui}  # Componentes
+│   ├── lib/{supabase,email,...}      # Clientes, helpers, rate limit
+│   └── types/                        # Tipos TS espelhando o schema
+├── supabase/migrations/              # SQL versionado
+├── public/
+├── AGENT_INSTRUCTIONS.md             # Regras de código para agentes
+├── ARCHITECTURE.md                   # Arquitetura detalhada
+├── DESIGN_SYSTEM_WELCOME_TRIPS.md    # Design system oficial
+├── PROMPT_CONTEXT.md                 # Contexto de negócio
+└── SESSION_STARTER.md                # Prompt para abrir sessão com agente
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Como rodar
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+cp .env.example .env.local   # preencher as variáveis
+npm install
+npm run dev                  # http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Variáveis de ambiente
 
-## Learn More
+| Variável | Uso |
+|---|---|
+| `NEXT_PUBLIC_SUPABASE_URL` | URL do projeto Supabase |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Anon key (cliente público) |
+| `SUPABASE_SERVICE_ROLE_KEY` | Service role (server-side admin) |
+| `NEXT_PUBLIC_SITE_URL` | URL canônica (ex: `https://carreiras.welcomegroup.com.br`) |
+| `RESEND_API_KEY` | API key do Resend (opcional — se ausente, e-mails viram no-op) |
+| `RESEND_FROM_EMAIL` | Remetente dos e-mails transacionais |
+| `RESEND_RH_EMAIL` | Destino da notificação de nova candidatura |
 
-To learn more about Next.js, take a look at the following resources:
+## Setup do Supabase
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Criar projeto no Supabase.
+2. No SQL Editor, rodar em ordem:
+   - `supabase/migrations/001_initial_schema.sql`
+   - `supabase/migrations/002_rls_policies.sql`
+   - `supabase/migrations/003_seed_data.sql`
+   - `supabase/migrations/004_interviews.sql`
+3. Em Storage, criar os buckets: `resumes` (private), `talent-pool` (private), `testimonials` (public), `culture` (public).
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Deploy
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Configurado para Vercel (veja `vercel.json`). Push em `main` dispara deploy automático. As mesmas envs acima precisam estar configuradas em Project Settings → Environment Variables para Production + Preview + Development.

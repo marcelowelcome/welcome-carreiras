@@ -4,6 +4,18 @@
 
 ---
 
+## Status atual (Abril 2026)
+
+**Sprint 1 concluída** — portal público (home, /vagas, /vagas/[slug], /cultura, /banco-de-talentos) e admin completo (dashboard, vagas CRUD, Kanban por vaga, lista global de candidaturas, banco de talentos, configurações de cultura/depoimentos). Estética Welcome Trips aplicada como linguagem visual global. Reads do admin via service role; writes via `/api/admin/*`. CVs abertos via signed URL do Supabase Storage.
+
+**Sprint 2 concluída** — entrevistas estruturadas (Bar Raiser + 3 Pares + Painel de Decisão com voto e pilares BeWelcome), e-mails transacionais via Resend (candidato + RH + talent pool), rate limit por IP via tabela `rate_limit_log` no Supabase, validação de upload por magic bytes (`%PDF-`).
+
+**Pendente na Sprint 2:** LGPD Fase 2 — página `/meus-dados` para o candidato visualizar e solicitar exclusão.
+
+**Onde começar na Sprint 3:** ver seção "Sprints em aberto" ao final deste arquivo.
+
+---
+
 ## Prompt de Abertura de Sessão
 
 ```
@@ -222,4 +234,27 @@ Use @dnd-kit/core e @dnd-kit/sortable. Siga AGENT_INSTRUCTIONS.md para padrões.
 3. **Teste antes de avançar.** Peça ao agente para rodar `npm run build` e verificar se compila.
 4. **Peça revisão.** Ao final de cada tarefa, peça: "Revise o código que acabamos de criar. Há inconsistências com ARCHITECTURE.md ou AGENT_INSTRUCTIONS.md?"
 5. **Commite ao final.** Peça ao agente para sugerir o commit message seguindo a convenção de AGENT_INSTRUCTIONS.md seção 8.
+
+---
+
+## Sprints em aberto
+
+### Sprint 3 — Conteúdo real, marca e LGPD
+
+Objetivo: transformar o portal genérico em algo que represente visualmente o Welcome Group e atender a LGPD Fase 2.
+
+1. Substituir seed por **vagas reais**, **depoimentos reais** (com fotos) e **números reais** (home `NumbersGrid`).
+2. Trocar o textual "Welcome Carreiras" pelo **logo oficial** do grupo em `Nav` e `Footer`.
+3. **Marca-d'água do mapa-múndi** (§7 do DESIGN_SYSTEM_WELCOME_TRIPS) em backgrounds-chave (hero home, CTA final).
+4. **OG images dinâmicas por vaga** (`/vagas/[slug]/opengraph-image.tsx`) + metadados sociais completos.
+5. **Foto da equipe** na home em composição circular (§6 do design system).
+6. **LGPD Fase 2:** página `/meus-dados` onde o candidato consulta dados próprios via e-mail + token e solicita exclusão. Endpoint `POST /api/lgpd/delete-request` registra pedido; admin trata em `/admin/lgpd`.
+
+### Sprint 4 — Analytics e integrações externas
+
+1. GA4 (`NEXT_PUBLIC_GA_ID`) + eventos do funil (ver vaga → iniciar form → submeter).
+2. ActiveCampaign: candidato do banco de talentos entra em lista de nutrição.
+3. WhatsApp: notificar candidato em mudanças de etapa críticas (entrevista agendada, oferta, reprovação).
+4. ClickUp: criar task automática por nova candidatura.
+5. Slack webhook: canal `#carreiras` recebe ping por nova candidatura.
 6. **Documente decisões.** Se algo mudar em relação ao planejado, atualize ARCHITECTURE.md imediatamente.

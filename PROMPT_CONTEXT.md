@@ -152,8 +152,13 @@ Termos usados internamente que o agente precisa conhecer:
 | **WelConnect** | Eventos de networking profissional organizados pelo grupo (ex: WelConnect Mendoza, WelConnect Cartagena) |
 | **Trade** | Profissionais e empresas do setor de turismo |
 | **Banco de talentos** | Pool de candidatos que se cadastraram sem vaga específica |
-| **Pipeline / Funil** | Etapas do processo seletivo (inscrito → triagem → entrevista → desafio → proposta) |
+| **Pipeline / Funil** | Etapas do processo seletivo (inscrito → triagem → entrevista → desafio → proposta). No Kanban, "triagem" aparece como **Phone Screen**. |
 | **Scorecard** | Avaliação numérica (1-5) + notas por etapa de entrevista |
+| **BeWelcome** | Conjunto de 6 princípios de cultura do Welcome Group: Apaixonados pela jornada do cliente, Seja Bem-Vindo, Protagonize-se, Invente, Conforto no desconforto, Data Driven. |
+| **Bar Raiser** | Primeira entrevista do loop. Papel de "guardião do padrão" de contratação. |
+| **Pares** | Entrevistas 2, 3 e 4 do loop (1º, 2º e 3º par) — feitas por colegas do time ou áreas afins. |
+| **Painel de Decisão** | Reunião final que consolida votos e define oferta ou encerramento. |
+| **Voto da entrevista** | 4 opções: Muito inclinado / Inclinado / Pouco inclinado / Não inclinado a contratar. |
 | **EVP** | Employee Value Proposition — proposta de valor como empregador |
 
 ---
@@ -161,10 +166,8 @@ Termos usados internamente que o agente precisa conhecer:
 ## 7. Restrições e Considerações
 
 ### LGPD
-- Candidatos devem consentir com o tratamento de dados ao submeter candidatura.
-- Texto de consentimento obrigatório no formulário: "Ao enviar sua candidatura, você autoriza o Welcome Group a armazenar e utilizar seus dados pessoais exclusivamente para fins de recrutamento e seleção, conforme a Lei Geral de Proteção de Dados (LGPD)."
-- Currículos devem ser armazenados em bucket privado no Supabase Storage.
-- Implementar opção de exclusão de dados (Fase 2).
+- **Fase 1 (feito):** consentimento obrigatório no formulário (checkbox com `LGPD_CONSENT_TEXT`); CVs armazenados no bucket privado `resumes`; downloads no admin via signed URL curta (`/api/admin/resumes`).
+- **Fase 2 (pendente — Sprint 3):** página pública `/meus-dados` onde o candidato consulta dados próprios via e-mail + token de verificação e solicita exclusão; admin processa o pedido em `/admin/lgpd`.
 
 ### Acessibilidade
 - WCAG 2.1 AA mínimo.

@@ -57,31 +57,55 @@ export function JobList({ jobs, showBrand = true }: JobListProps) {
 
 ### 2.3 Supabase Queries
 
+Três clientes, cada um com um papel claro:
+
+| Cliente | Onde usar | Papel |
+|---|---|---|
+| `createServerClient` (SSR com cookies) | Páginas públicas que dependem da sessão do visitante | Anon + cookies, respeita RLS |
+| `createBrowserClient` (anon) | Leituras/escritas públicas em Client Components (ex: formulários públicos que só leem metadados) | Anon, respeita RLS |
+| `createServiceRoleClient` | **Tudo do admin**: páginas em `/admin/*` e rotas `/api/admin/*` | Bypassa RLS. Seguro porque `middleware.ts` já bloqueia acesso não-autenticado. **Nunca importar em Client Component.** |
+
+**Padrão do admin — leitura:**
 ```tsx
-// ✅ CORRETO — Server Component com createServerClient
-import { createServerClient } from "@/lib/supabase/server";
+// src/app/admin/candidaturas/page.tsx
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 
-export default async function VagasPage() {
-  const supabase = await createServerClient();
-  const { data: jobs } = await supabase
-    .from("jobs")
-    .select("*")
-    .eq("status", "published")
-    .order("published_at", { ascending: false });
+export const dynamic = "force-dynamic"; // obrigatório em toda página admin
 
-  return <JobList jobs={jobs ?? []} />;
+export default async function Page() {
+  const supabase = createServiceRoleClient();
+  const { data, error } = await supabase.from("applications").select("*");
+  if (error) console.error("[admin/candidaturas]", error); // loga erros
+  return <Table data={data ?? []} />;
+}
+```
+
+**Padrão do admin — escrita (sempre via API route, nunca direto do browser):**
+```tsx
+// src/app/api/admin/applications/[id]/route.ts
+import { createServiceRoleClient } from "@/lib/supabase/admin";
+export async function PATCH(req: Request, { params }) {
+  const supabase = createServiceRoleClient();
+  // ... update ...
 }
 
-// ✅ CORRETO — Client Component com createBrowserClient
-"use client";
-import { createBrowserClient } from "@/lib/supabase/client";
+// No componente Client, chame via fetch:
+await fetch(`/api/admin/applications/${id}`, {
+  method: "PATCH",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ stage: "entrevista" }),
+});
+```
 
-function useApplicationSubmit() {
-  const supabase = createBrowserClient();
-  // ...
-}
+Por que: o anon client no browser depende de a sessão Supabase Auth traduzir no servidor para role `authenticated`. Isso falha silenciosamente em produção e os writes somem. O middleware já garante auth na borda, e o service role via API é confiável.
 
-// ❌ ERRADO — Nunca use service role key no client
+**Para arquivos privados do Storage:**
+- Não use URL direta `/storage/v1/object/authenticated/...` — ela exige header `Authorization` que o browser não envia.
+- Use a rota `/api/admin/resumes?path=...` que gera uma **signed URL** curta (60s) via service role e redireciona.
+
+```tsx
+// ❌ ERRADO — Nunca use service role key no client ou em Client Component
+// ❌ ERRADO — Links diretos para /storage/v1/object/authenticated/...
 ```
 
 ### 2.4 Validação com Zod
@@ -277,6 +301,48 @@ export const config = { matcher: ["/admin/:path*", "/api/admin/:path*"] };
 - Rich text (descrição de vaga): sanitize HTML antes de salvar no banco. Use DOMPurify ou similar.
 - Inputs de texto: trim + escape antes de queries.
 - Nunca interpole variáveis diretamente em SQL — use sempre o query builder do Supabase.
+
+### 4.4 Rate Limit em endpoints públicos
+
+Use o helper `checkRateLimit` de `src/lib/rate-limit.ts` em toda rota pública que grava dados. Fail-open (se Supabase errar, passa).
+
+```ts
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+
+const ip = getClientIp(request);
+const rate = await checkRateLimit({
+  ip,
+  endpoint: "applications",
+  maxRequests: 5,
+  windowSeconds: 15 * 60,
+});
+if (!rate.ok) return NextResponse.json({ error: "..." }, { status: 429 });
+```
+
+### 4.5 Validação de upload de PDF
+
+`File.type` mente — use magic bytes. `isPdfByMagic(file)` em `src/lib/file-validation.ts` confirma que o arquivo começa com `%PDF-`.
+
+```ts
+import { isPdfByMagic } from "@/lib/file-validation";
+if (!(await isPdfByMagic(resume))) {
+  return NextResponse.json({ error: "PDF inválido" }, { status: 400 });
+}
+```
+
+### 4.6 E-mails transacionais
+
+Sempre fire-and-forget para não bloquear a resposta HTTP.
+
+```ts
+import { sendEmail, RH_EMAIL } from "@/lib/email/resend";
+import { applicationConfirmationEmail } from "@/lib/email/templates";
+
+const mail = applicationConfirmationEmail({ ... });
+void sendEmail({ to: candidateEmail, subject: mail.subject, html: mail.html });
+```
+
+`sendEmail` já é idempotente: se `RESEND_API_KEY` não está setado, ele loga um warn e retorna `null` sem quebrar nada.
 
 ---
 
