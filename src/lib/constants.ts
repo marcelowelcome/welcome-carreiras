@@ -6,6 +6,9 @@ import type {
   WorkModel,
   ApplicationStage,
   ReferralSource,
+  InterviewType,
+  InterviewVote,
+  CulturePillar,
 } from "@/types";
 
 // ==========================================
@@ -154,3 +157,55 @@ export const ALLOWED_RESUME_TYPES = ["application/pdf"];
 
 export const LGPD_CONSENT_TEXT =
   "Ao enviar sua candidatura, você autoriza o Welcome Group a armazenar e utilizar seus dados pessoais exclusivamente para fins de recrutamento e seleção, conforme a Lei Geral de Proteção de Dados (LGPD).";
+
+// ==========================================
+// Entrevistas — tipos, votos e pilares BeWelcome
+// ==========================================
+
+export const INTERVIEW_TYPE_LABELS: Record<InterviewType, string> = {
+  bar_raiser: "Bar Raiser",
+  par_1: "1º Par",
+  par_2: "2º Par",
+  par_3: "3º Par",
+  painel_decisao: "Painel de Decisão",
+};
+
+export const INTERVIEW_TYPES_ORDER: InterviewType[] = [
+  "bar_raiser",
+  "par_1",
+  "par_2",
+  "par_3",
+  "painel_decisao",
+];
+
+export const INTERVIEW_VOTE_LABELS: Record<InterviewVote, string> = {
+  muito_inclinado: "Muito inclinado a contratar",
+  inclinado: "Inclinado a contratar",
+  pouco_inclinado: "Pouco inclinado a contratar",
+  nao_inclinado: "Não inclinado a contratar",
+};
+
+export const INTERVIEW_VOTE_COLORS: Record<InterviewVote, string> = {
+  muito_inclinado: "bg-emerald-100 text-emerald-700",
+  inclinado: "bg-teal-100 text-teal-700",
+  pouco_inclinado: "bg-amber-100 text-amber-700",
+  nao_inclinado: "bg-red-100 text-red-700",
+};
+
+export const CULTURE_PILLAR_LABELS: Record<CulturePillar, string> = {
+  apaixonados_jornada_cliente: "Apaixonados pela jornada do cliente",
+  seja_bem_vindo: "Seja Bem-Vindo",
+  protagonize_se: "Protagonize-se",
+  invente: "Invente",
+  conforto_desconforto: "Conforto no desconforto",
+  data_driven: "Data Driven",
+};
+
+export const CULTURE_PILLARS_ORDER: CulturePillar[] = [
+  "apaixonados_jornada_cliente",
+  "seja_bem_vindo",
+  "protagonize_se",
+  "invente",
+  "conforto_desconforto",
+  "data_driven",
+];

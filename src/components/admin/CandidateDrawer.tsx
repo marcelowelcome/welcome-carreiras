@@ -7,6 +7,7 @@ import {
   APPLICATION_STAGE_LABELS,
   APPLICATION_STAGES_ORDER,
 } from "@/lib/constants";
+import { InterviewsSection } from "./InterviewsSection";
 import type {
   Application,
   ApplicationStage,
@@ -243,6 +244,9 @@ export function CandidateDrawer({
               <p className="mt-1 text-xs text-wt-gray-500">Salvando...</p>
             )}
           </div>
+
+          {/* Entrevistas estruturadas (Bar Raiser + pares + painel) */}
+          <InterviewsSection applicationId={application.id} />
 
           {/* Avaliações por etapa */}
           <div className="rounded-wt-sm bg-white p-4 shadow-wt-sm">

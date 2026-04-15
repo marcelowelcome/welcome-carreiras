@@ -124,6 +124,41 @@ export interface StageHistory {
   created_at: string;
 }
 
+export type InterviewType =
+  | "bar_raiser"
+  | "par_1"
+  | "par_2"
+  | "par_3"
+  | "painel_decisao";
+
+export type InterviewVote =
+  | "muito_inclinado"
+  | "inclinado"
+  | "pouco_inclinado"
+  | "nao_inclinado";
+
+export type CulturePillar =
+  | "apaixonados_jornada_cliente"
+  | "seja_bem_vindo"
+  | "protagonize_se"
+  | "invente"
+  | "conforto_desconforto"
+  | "data_driven";
+
+export type PillarScores = Partial<Record<CulturePillar, number>>;
+
+export interface Interview {
+  id: string;
+  application_id: string;
+  type: InterviewType;
+  interviewer_name: string | null;
+  vote: InterviewVote | null;
+  pillar_scores: PillarScores;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface CultureContent {
   id: string;
   section_key: string;
