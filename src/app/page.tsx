@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HeroSection } from "@/components/public/HeroSection";
-import { EVPBlock } from "@/components/public/EVPBlock";
-import { NumbersGrid } from "@/components/public/NumbersGrid";
+import { CountersStrip } from "@/components/public/CountersStrip";
+import { ManifestoSection } from "@/components/public/ManifestoSection";
+import { VerticalsCards } from "@/components/public/VerticalsCards";
+import { BenefitsCarousel } from "@/components/public/BenefitsCarousel";
+import { VideoSection } from "@/components/public/VideoSection";
 import { JobCard } from "@/components/public/JobCard";
 import { TestimonialCarousel } from "@/components/public/TestimonialCarousel";
 import { createServerClient } from "@/lib/supabase/server";
@@ -36,8 +39,9 @@ export default async function Home() {
   return (
     <>
       <HeroSection />
-      <EVPBlock />
-      <NumbersGrid />
+      <CountersStrip />
+      <ManifestoSection />
+      <VerticalsCards />
 
       {/* Vagas em destaque */}
       {featuredJobs.length > 0 && (
@@ -45,7 +49,7 @@ export default async function Home() {
           <div className="mx-auto max-w-wt-container px-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="font-wt-heading text-xs font-semibold uppercase tracking-[0.2em] text-wt-primary">
+                <p className="font-wt-heading text-xs font-semibold uppercase tracking-[0.22em] text-wt-primary">
                   Vagas em destaque
                 </p>
                 <h2 className="mt-3 font-wt-heading text-3xl font-bold tracking-tight text-wt-teal-deep sm:text-4xl">
@@ -79,25 +83,30 @@ export default async function Home() {
         </section>
       )}
 
+      <BenefitsCarousel />
+
       {testimonials.length > 0 && (
         <TestimonialCarousel testimonials={testimonials} />
       )}
+
+      <VideoSection />
 
       {/* CTA final */}
       <section className="bg-wt-teal-deep py-20 text-white sm:py-24">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <h2 className="font-wt-heading text-3xl font-bold tracking-tight sm:text-4xl">
-            Não encontrou sua vaga?
+            Pronto para fazer parte?
           </h2>
           <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-white/80">
-            Cadastre-se no nosso banco de talentos e seja avisado quando surgir
-            uma oportunidade na sua área.
+            Não encontrou a vaga ideal agora? Cadastre-se no nosso banco de
+            talentos e seja a primeira pessoa a saber quando surgir uma
+            oportunidade na sua área.
           </p>
           <Link
             href="/banco-de-talentos"
             className="mt-10 inline-flex items-center gap-3 rounded-wt-sm bg-wt-orange px-8 py-3.5 font-wt-heading text-sm font-bold uppercase tracking-[0.05em] text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-wt-orange/90 hover:shadow-wt-md"
           >
-            Cadastrar no banco de talentos
+            Quero trabalhar na Welcome
             <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
