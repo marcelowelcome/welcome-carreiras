@@ -3,6 +3,8 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { JobFormEditor } from "@/components/admin/JobFormEditor";
 import type { Job } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }

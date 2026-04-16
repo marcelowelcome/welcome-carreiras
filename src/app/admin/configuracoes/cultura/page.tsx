@@ -2,6 +2,8 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { CultureEditor } from "./CultureEditor";
 import type { CultureContent } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function CulturaAdminPage() {
   const supabase = createServiceRoleClient();
   const { data } = await supabase

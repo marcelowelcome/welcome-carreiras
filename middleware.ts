@@ -40,7 +40,7 @@ export async function middleware(request: NextRequest) {
 
   if ((isAdminRoute || isAdminApi) && !user) {
     if (isAdminApi) {
-      return NextResponse.json({ error: "Nao autorizado" }, { status: 401 });
+      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
     }
     const loginUrl = new URL("/admin/login", request.url);
     loginUrl.searchParams.set("redirect", request.nextUrl.pathname);

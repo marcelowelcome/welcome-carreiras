@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { FileText, MessageSquareQuote } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 const SECTIONS = [
   {
     href: "/admin/configuracoes/cultura",

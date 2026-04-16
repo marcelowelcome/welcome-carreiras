@@ -78,7 +78,7 @@ export function AdminJobsTable({ jobs }: AdminJobsTableProps) {
   const columns: Column<JobRow>[] = [
     {
       key: "title",
-      header: "Titulo",
+      header: "Título",
       render: (job) => (
         <Link
           href={`/admin/vagas/${job.id}`}

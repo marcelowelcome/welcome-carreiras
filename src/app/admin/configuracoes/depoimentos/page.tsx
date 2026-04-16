@@ -2,6 +2,8 @@ import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { TestimonialsAdmin } from "./TestimonialsAdmin";
 import type { Testimonial } from "@/types";
 
+export const dynamic = "force-dynamic";
+
 export default async function DepoimentosAdminPage() {
   const supabase = createServiceRoleClient();
   const { data } = await supabase

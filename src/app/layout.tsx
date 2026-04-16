@@ -27,7 +27,7 @@ export const metadata: Metadata = {
   description:
     "Construa sua carreira em um lugar que transforma sonhos em destinos. Veja as vagas abertas no Welcome Group.",
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"
+    process.env.NEXT_PUBLIC_SITE_URL || "https://welcome-carreiras.vercel.app"
   ),
 };
 

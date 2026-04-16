@@ -72,14 +72,14 @@ function ManifestoEditor({ section }: { section: CultureContent }) {
       onVisibilityChange={setVisible}
       onSave={handleSave}
     >
-      <Field label="Titulo" value={title} onChange={setTitle} />
+      <Field label="Título" value={title} onChange={setTitle} />
       <TextArea label="Texto do manifesto" value={text} onChange={setText} rows={5} />
     </SectionCard>
   );
 }
 
 // ==========================================
-// Valores — lista de cards com icone, titulo, descricao
+// Valores — lista de cards com ícone, título, descrição
 // ==========================================
 
 interface ValueItem {
@@ -133,7 +133,7 @@ function ValuesEditor({ section }: { section: CultureContent }) {
       onVisibilityChange={setVisible}
       onSave={handleSave}
     >
-      <Field label="Titulo da secao" value={title} onChange={setTitle} />
+      <Field label="Título da seção" value={title} onChange={setTitle} />
 
       <div className="space-y-3">
         {items.map((item, i) => (
@@ -153,14 +153,14 @@ function ValuesEditor({ section }: { section: CultureContent }) {
                   type="text"
                   value={item.title}
                   onChange={(e) => updateItem(i, "title", e.target.value)}
-                  placeholder="Titulo do valor"
+                  placeholder="Título do valor"
                   className="flex-1 rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
               </div>
               <textarea
                 value={item.description}
                 onChange={(e) => updateItem(i, "description", e.target.value)}
-                placeholder="Descricao..."
+                placeholder="Descrição..."
                 rows={2}
                 className="w-full rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
@@ -257,7 +257,7 @@ function BenefitsEditor({ section }: { section: CultureContent }) {
       onVisibilityChange={setVisible}
       onSave={handleSave}
     >
-      <Field label="Titulo da secao" value={title} onChange={setTitle} />
+      <Field label="Título da seção" value={title} onChange={setTitle} />
 
       <div className="space-y-4">
         {categories.map((cat, ci) => (
@@ -348,7 +348,7 @@ function DeiEditor({ section }: { section: CultureContent }) {
       onVisibilityChange={setVisible}
       onSave={handleSave}
     >
-      <Field label="Titulo" value={title} onChange={setTitle} />
+      <Field label="Título" value={title} onChange={setTitle} />
       <TextArea label="Texto" value={text} onChange={setText} rows={4} />
     </SectionCard>
   );

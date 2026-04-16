@@ -1,5 +1,7 @@
 import { JobFormEditor } from "@/components/admin/JobFormEditor";
 
+export const dynamic = "force-dynamic";
+
 export default function NovaVagaPage() {
   return (
     <div>

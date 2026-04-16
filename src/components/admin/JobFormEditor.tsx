@@ -147,7 +147,7 @@ export function JobFormEditor({ job }: JobFormEditorProps) {
             label="Departamento" name="department" required defaultValue={job?.department}
             options={DEPARTMENT_LABELS as Record<string, string>} error={errors.department}
           />
-          <FormField label="Localizacao" name="location" required defaultValue={job?.location ?? "Curitiba, PR"} error={errors.location} />
+          <FormField label="Localização" name="location" required defaultValue={job?.location ?? "Curitiba, PR"} error={errors.location} />
           <FormSelect
             label="Modelo de trabalho" name="work_model" required defaultValue={job?.work_model}
             options={WORK_MODEL_LABELS as Record<string, string>} error={errors.work_model}
@@ -174,14 +174,14 @@ export function JobFormEditor({ job }: JobFormEditorProps) {
         </div>
       </section>
 
-      {/* Descricao */}
+      {/* Descrição */}
       <section className="rounded-xl border border-border bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-primary">Descricao da vaga</h2>
+        <h2 className="text-lg font-semibold text-primary">Descrição da vaga</h2>
 
         <div className="mt-4 space-y-4">
-          <SimpleEditor label="Descricao" name="description" required defaultValue={job?.description} error={errors.description} />
+          <SimpleEditor label="Descrição" name="description" required defaultValue={job?.description} error={errors.description} />
           <SimpleEditor label="Responsabilidades" name="responsibilities" required defaultValue={job?.responsibilities} error={errors.responsibilities} />
-          <SimpleEditor label="Requisitos obrigatorios" name="requirements_must" required defaultValue={job?.requirements_must} error={errors.requirements_must} />
+          <SimpleEditor label="Requisitos obrigatórios" name="requirements_must" required defaultValue={job?.requirements_must} error={errors.requirements_must} />
           <SimpleEditor label="Diferenciais" name="requirements_nice" defaultValue={job?.requirements_nice ?? ""} error={errors.requirements_nice} />
           <SimpleEditor label="Benefícios" name="benefits" defaultValue={job?.benefits ?? ""} error={errors.benefits} />
         </div>
@@ -213,14 +213,14 @@ export function JobFormEditor({ job }: JobFormEditorProps) {
               <div className="flex-1 space-y-2">
                 <input
                   type="text"
-                  placeholder="Titulo da etapa"
+                  placeholder="Título da etapa"
                   value={step.title}
                   onChange={(e) => updateStep(i, "title", e.target.value)}
                   className="w-full rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                 />
                 <input
                   type="text"
-                  placeholder="Descricao"
+                  placeholder="Descrição"
                   value={step.description}
                   onChange={(e) => updateStep(i, "description", e.target.value)}
                   className="w-full rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
