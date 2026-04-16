@@ -2,19 +2,37 @@ import Link from "next/link";
 import { Plus } from "lucide-react";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { AdminJobsTable } from "./AdminJobsTable";
+import type { Job } from "@/types";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminVagasPage() {
   const supabase = createServiceRoleClient();
 
-  const { data: jobs, error } = await supabase
-    .from("jobs")
-    .select("*, applications(count)")
-    .order("created_at", { ascending: false });
-  if (error) {
-    console.error("[admin/vagas] supabase:", error);
+  // Duas queries separadas — o embed applications(count) do PostgREST
+  // dropava linhas silenciosamente (mesmo bug de /admin/candidaturas).
+  const [jobsResult, countsResult] = await Promise.all([
+    supabase.from("jobs").select("*").order("created_at", { ascending: false }),
+    supabase.from("applications").select("job_id"),
+  ]);
+
+  if (jobsResult.error) console.error("[admin/vagas] jobs:", jobsResult.error);
+  if (countsResult.error) console.error("[admin/vagas] counts:", countsResult.error);
+
+  const rawJobs = (jobsResult.data ?? []) as Job[];
+  const applications = countsResult.data ?? [];
+
+  // Conta candidaturas por job_id
+  const countByJob = new Map<string, number>();
+  for (const app of applications) {
+    const jid = app.job_id as string;
+    countByJob.set(jid, (countByJob.get(jid) ?? 0) + 1);
   }
+
+  const jobs = rawJobs.map((job) => ({
+    ...job,
+    applications_count: countByJob.get(job.id) ?? 0,
+  }));
 
   return (
     <div>
@@ -37,7 +55,7 @@ export default async function AdminVagasPage() {
       </div>
 
       <div className="mt-8">
-        <AdminJobsTable jobs={jobs ?? []} />
+        <AdminJobsTable jobs={jobs} />
       </div>
     </div>
   );

@@ -20,7 +20,7 @@ interface JobRow {
   status: string;
   created_at: string;
   published_at: string | null;
-  applications: { count: number }[];
+  applications_count: number;
 }
 
 interface AdminJobsTableProps {
@@ -131,7 +131,7 @@ export function AdminJobsTable({ jobs }: AdminJobsTableProps) {
           className="inline-flex items-center gap-1 text-muted hover:text-primary"
         >
           <Users className="h-4 w-4" />
-          {job.applications?.[0]?.count ?? 0}
+          {job.applications_count}
         </Link>
       ),
     },
