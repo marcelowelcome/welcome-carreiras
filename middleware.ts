@@ -47,6 +47,12 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(loginUrl);
   }
 
+  // Impede qualquer cache em páginas e APIs do admin — dados devem ser sempre frescos.
+  response.headers.set(
+    "Cache-Control",
+    "private, no-cache, no-store, max-age=0, must-revalidate"
+  );
+
   return response;
 }
 
