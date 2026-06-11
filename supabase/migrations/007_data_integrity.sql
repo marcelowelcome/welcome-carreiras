@@ -5,8 +5,17 @@
 -- ============================================================
 
 -- Unique constraint: um candidato só pode se inscrever uma vez por vaga (RN-001)
-ALTER TABLE applications
-  ADD CONSTRAINT IF NOT EXISTS uq_application_job_email UNIQUE (job_id, email);
+-- ADD CONSTRAINT IF NOT EXISTS não existe no PostgreSQL — usar DO block
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_application_job_email'
+  ) THEN
+    ALTER TABLE applications
+      ADD CONSTRAINT uq_application_job_email UNIQUE (job_id, email);
+  END IF;
+END;
+$$;
 
 -- Coluna lgpd_consent_at para registrar momento do consentimento LGPD (RN-007)
 ALTER TABLE applications
