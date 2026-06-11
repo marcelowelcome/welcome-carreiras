@@ -5,7 +5,16 @@
 -- ============================================================
 
 -- Unique constraint: um candidato só pode se inscrever uma vez por vaga (RN-001)
--- ADD CONSTRAINT IF NOT EXISTS não existe no PostgreSQL — usar DO block
+
+-- 1) Remover duplicatas: manter apenas a candidatura mais recente por (job_id, email)
+DELETE FROM applications
+WHERE id NOT IN (
+  SELECT DISTINCT ON (job_id, email) id
+  FROM applications
+  ORDER BY job_id, email, created_at DESC
+);
+
+-- 2) Criar a constraint (idempotente via DO block)
 DO $$
 BEGIN
   IF NOT EXISTS (
