@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
@@ -80,6 +81,10 @@ export async function PATCH(request: Request, { params }: Ctx) {
       return NextResponse.json({ error: "Erro ao criar configuração" }, { status: 500 });
     }
   }
+
+  // Invalida o ISR das páginas públicas que leem settings de culture_content
+  revalidatePath("/");
+  revalidatePath("/cultura");
 
   return NextResponse.json({ ok: true });
 }

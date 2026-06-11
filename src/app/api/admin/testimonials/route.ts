@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
@@ -44,5 +45,9 @@ export async function POST(request: Request) {
     console.error("[API] insert testimonial:", error);
     return NextResponse.json({ error: "Erro ao criar depoimento" }, { status: 500 });
   }
+
+  revalidatePath("/");
+  revalidatePath("/cultura");
+
   return NextResponse.json({ ok: true });
 }

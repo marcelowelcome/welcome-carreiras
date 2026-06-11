@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
@@ -42,6 +43,10 @@ export async function PATCH(request: Request, { params }: Ctx) {
     console.error("[API] update testimonial:", error);
     return NextResponse.json({ error: "Erro ao atualizar depoimento" }, { status: 500 });
   }
+
+  revalidatePath("/");
+  revalidatePath("/cultura");
+
   return NextResponse.json({ ok: true });
 }
 
@@ -53,5 +58,9 @@ export async function DELETE(_req: Request, { params }: Ctx) {
     console.error("[API] delete testimonial:", error);
     return NextResponse.json({ error: "Erro ao excluir depoimento" }, { status: 500 });
   }
+
+  revalidatePath("/");
+  revalidatePath("/cultura");
+
   return NextResponse.json({ ok: true });
 }

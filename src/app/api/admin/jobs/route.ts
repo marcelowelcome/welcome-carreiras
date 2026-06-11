@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { jobFormSchema } from "@/lib/validators";
 import { slugify } from "@/lib/utils";
@@ -38,15 +39,30 @@ export async function POST(request: Request) {
 
   // SEC-002: usar result.data; gerar slug e published_at server-side — nunca aceitar do cliente
   const { title, ...rest } = result.data;
+
+  const supabase = createServiceRoleClient();
+
+  // Slug único: em colisão (ex.: vaga duplicada), acrescenta sufixo numérico
+  const baseSlug = slugify(title);
+  let slug = baseSlug;
+  const { data: existing } = await supabase
+    .from("jobs")
+    .select("slug")
+    .like("slug", `${baseSlug}%`);
+  if (existing?.some((j) => j.slug === baseSlug)) {
+    const taken = new Set(existing.map((j) => j.slug));
+    let n = 2;
+    while (taken.has(`${baseSlug}-${n}`)) n++;
+    slug = `${baseSlug}-${n}`;
+  }
+
   const insertPayload = {
     ...rest,
     title,
     status: "draft" as const,
-    slug: slugify(title),
+    slug,
     published_at: null,
   };
-
-  const supabase = createServiceRoleClient();
   const { data, error } = await supabase
     .from("jobs")
     .insert(insertPayload)
@@ -56,5 +72,9 @@ export async function POST(request: Request) {
     console.error("[API] create job:", error);
     return NextResponse.json({ error: "Erro ao criar vaga" }, { status: 500 });
   }
+
+  // Home exibe vagas em destaque via ISR
+  revalidatePath("/");
+
   return NextResponse.json({ data });
 }

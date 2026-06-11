@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/admin";
 
@@ -36,5 +37,10 @@ export async function PATCH(request: Request, { params }: Ctx) {
     console.error("[API] update culture_content:", error);
     return NextResponse.json({ error: "Erro ao atualizar conteúdo" }, { status: 500 });
   }
+
+  // Invalida o ISR das páginas públicas que exibem culture_content
+  revalidatePath("/");
+  revalidatePath("/cultura");
+
   return NextResponse.json({ ok: true });
 }
