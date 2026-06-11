@@ -36,7 +36,7 @@ export async function checkRateLimit({
 
   if (countError) {
     console.error("[rate-limit] falha ao contar:", countError);
-    return { ok: true, remaining: maxRequests };
+    return { ok: false, remaining: 0 };
   }
 
   const used = count ?? 0;
@@ -55,12 +55,18 @@ export async function checkRateLimit({
   return { ok: true, remaining: maxRequests - used - 1 };
 }
 
-// Extrai IP do cliente confiando nos headers da Vercel / proxy.
+// Extrai IP do cliente. Prefere x-real-ip (definido pelo proxy mais próximo),
+// depois o primeiro segmento de x-forwarded-for (menos confiável mas ainda útil
+// quando x-real-ip não está disponível).
 export function getClientIp(request: Request): string {
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) return realIp;
+
   const fwd = request.headers.get("x-forwarded-for");
   if (fwd) {
     const first = fwd.split(",")[0]?.trim();
     if (first) return first;
   }
-  return request.headers.get("x-real-ip") ?? "unknown";
+
+  return "unknown";
 }

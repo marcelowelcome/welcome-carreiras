@@ -38,13 +38,25 @@ export async function middleware(request: NextRequest) {
 
   const isAdminApi = request.nextUrl.pathname.startsWith("/api/admin");
 
-  if ((isAdminRoute || isAdminApi) && !user) {
-    if (isAdminApi) {
-      return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+  if (isAdminRoute || isAdminApi) {
+    // SEC-005: verificar autenticação
+    if (!user) {
+      if (isAdminApi) {
+        return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      }
+      const loginUrl = new URL("/admin/login", request.url);
+      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
     }
-    const loginUrl = new URL("/admin/login", request.url);
-    loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-    return NextResponse.redirect(loginUrl);
+
+    // SEC-005: verificar domínio — apenas @welcometrips.com.br tem acesso ao admin
+    const email = user.email ?? "";
+    if (!email.endsWith("@welcometrips.com.br")) {
+      if (isAdminApi) {
+        return NextResponse.json({ error: "Não autorizado" }, { status: 401 });
+      }
+      return NextResponse.redirect(new URL("/admin/login", request.url));
+    }
   }
 
   // Impede qualquer cache em páginas e APIs do admin — dados devem ser sempre frescos.
@@ -57,5 +69,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: ["/admin", "/admin/:path*", "/api/admin", "/api/admin/:path*"],
 };

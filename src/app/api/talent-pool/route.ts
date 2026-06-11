@@ -40,6 +40,7 @@ export async function POST(request: Request) {
       area_interest: parsed.data.area_interest,
       brand_interest: parsed.data.brand_interest,
       opt_in_alerts: parsed.data.opt_in_alerts,
+      lgpd_consent_at: new Date().toISOString(),
     });
 
     if (error) {

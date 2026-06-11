@@ -9,7 +9,7 @@ const FOOTER_LINKS = [
 const BRANDS = [
   "Welcome Weddings",
   "Welcome Trips",
-  "WelConnect",
+  "Welcome Group",
 ];
 
 export function Footer() {

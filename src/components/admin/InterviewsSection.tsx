@@ -220,6 +220,16 @@ function InterviewForm({
   const [notes, setNotes] = useState("");
   const [scores, setScores] = useState<PillarScores>({});
   const [saving, setSaving] = useState(false);
+  const [validationError, setValidationError] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+  // Auto-dismiss success message after 3 seconds
+  useEffect(() => {
+    if (!successMessage) return;
+    const t = setTimeout(() => setSuccessMessage(null), 3000);
+    return () => clearTimeout(t);
+  }, [successMessage]);
 
   function setPillar(pillar: CulturePillar, value: number) {
     setScores((prev) => {
@@ -234,23 +244,53 @@ function InterviewForm({
   }
 
   async function submit() {
+    setValidationError(null);
+    setSubmitError(null);
+
+    // UX-031: require at least one field filled
+    const hasAnyField =
+      interviewerName.trim() ||
+      vote ||
+      notes.trim() ||
+      Object.keys(scores).length > 0;
+
+    if (!hasAnyField) {
+      setValidationError(
+        "Preencha ao menos um campo (entrevistador, voto, pilar ou observações)."
+      );
+      return;
+    }
+
     setSaving(true);
-    const res = await fetch(
-      `/api/admin/applications/${applicationId}/interviews`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          type,
-          interviewer_name: interviewerName.trim() || null,
-          vote: vote || null,
-          pillar_scores: scores,
-          notes: notes.trim() || null,
-        }),
+    try {
+      const res = await fetch(
+        `/api/admin/applications/${applicationId}/interviews`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            type,
+            interviewer_name: interviewerName.trim() || null,
+            vote: vote || null,
+            pillar_scores: scores,
+            notes: notes.trim() || null,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        setSubmitError("Falha ao salvar entrevista. Tente novamente.");
+        setSaving(false);
+        return;
       }
-    );
-    setSaving(false);
-    if (res.ok) onSaved();
+
+      setSuccessMessage("Entrevista salva com sucesso.");
+      setSaving(false);
+      onSaved();
+    } catch {
+      setSubmitError("Erro de rede ao salvar entrevista.");
+      setSaving(false);
+    }
   }
 
   const inputClass =
@@ -333,6 +373,16 @@ function InterviewForm({
         placeholder="Observações sobre a entrevista..."
         className={inputClass}
       />
+
+      {validationError && (
+        <p role="alert" className="text-xs text-red-600">{validationError}</p>
+      )}
+      {submitError && (
+        <p role="alert" className="text-xs text-red-600">{submitError}</p>
+      )}
+      {successMessage && (
+        <p role="status" className="text-xs text-green-700">{successMessage}</p>
+      )}
 
       <button
         type="button"

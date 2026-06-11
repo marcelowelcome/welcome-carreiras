@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Send, Loader2, CheckCircle2 } from "lucide-react";
+import Link from "next/link";
+import { Send, Loader2, CheckCircle2, ArrowRight } from "lucide-react";
 import { talentPoolSchema } from "@/lib/validators";
 import {
   BRAND_LABELS,
@@ -31,6 +32,21 @@ export function TalentPoolForm() {
           Você foi adicionado ao nosso banco de talentos. Enviaremos um e-mail
           quando surgir uma vaga na sua área de interesse.
         </p>
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            href="/vagas"
+            className="inline-flex items-center gap-2 rounded-wt-sm bg-wt-orange px-6 py-3 font-wt-heading text-sm font-bold uppercase tracking-[0.05em] text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-wt-orange/90 hover:shadow-wt-md"
+          >
+            Ver vagas abertas
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/cultura"
+            className="inline-flex items-center gap-2 rounded-wt-sm border border-wt-gray-300 bg-white px-6 py-3 font-wt-heading text-sm font-bold uppercase tracking-[0.05em] text-wt-teal-deep transition-all duration-300 hover:-translate-y-0.5 hover:border-wt-primary hover:text-wt-primary hover:shadow-wt-sm"
+          >
+            Conheça nossa cultura
+          </Link>
+        </div>
       </div>
     );
   }
@@ -73,7 +89,15 @@ export function TalentPoolForm() {
         body: JSON.stringify(result.data),
       });
 
-      if (!response.ok) throw new Error("Falha ao cadastrar");
+      if (!response.ok) {
+        if (response.status === 409) {
+          setStatus("error");
+          setErrors({ form: "Este e-mail já está cadastrado no banco de talentos. Você já está em nossa lista!" });
+          return;
+        }
+        throw new Error("Falha ao cadastrar");
+      }
+
       setStatus("success");
     } catch {
       setStatus("error");

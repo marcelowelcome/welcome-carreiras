@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       cover_letter: (formData.get("cover_letter") as string) ?? "",
       salary_expectation: (formData.get("salary_expectation") as string) ?? "",
       referral_source: formData.get("referral_source") as string,
-      lgpd_consent: true,
+      lgpd_consent: formData.get("lgpd_consent") === "true",
     };
 
     const jobId = formData.get("job_id") as string;
@@ -85,6 +85,20 @@ export async function POST(request: Request) {
 
     const supabase = createServiceRoleClient();
 
+    // Verificar se a vaga existe e está publicada antes de qualquer upload
+    const { data: job, error: jobError } = await supabase
+      .from("jobs")
+      .select("id, status")
+      .eq("id", jobId)
+      .single();
+
+    if (jobError || !job || job.status !== "published") {
+      return NextResponse.json(
+        { error: "Vaga não encontrada ou não está disponível." },
+        { status: 400 }
+      );
+    }
+
     // Upload CV
     const filePath = `${jobId}/${crypto.randomUUID()}.pdf`;
     const { error: uploadError } = await supabase.storage
@@ -116,10 +130,17 @@ export async function POST(request: Request) {
         cover_letter: parsed.data.cover_letter || null,
         salary_expectation: parsed.data.salary_expectation || null,
         resume_path: filePath,
+        lgpd_consent_at: new Date().toISOString(),
       });
 
     if (insertError) {
       console.error("[API] Erro ao inserir candidatura:", insertError);
+      if (insertError.code === "23505") {
+        return NextResponse.json(
+          { error: "Você já se candidatou a esta vaga." },
+          { status: 409 }
+        );
+      }
       return NextResponse.json(
         { error: "Erro ao registrar candidatura" },
         { status: 500 }
@@ -130,25 +151,40 @@ export async function POST(request: Request) {
     const siteUrl =
       process.env.NEXT_PUBLIC_SITE_URL || new URL(request.url).origin;
 
-    const { data: job } = await supabase
-      .from("jobs")
-      .select("title, id")
-      .eq("id", jobId)
-      .single();
-    const jobTitle = job?.title ?? "a vaga";
+    const [jobResult, notifSettingsResult] = await Promise.all([
+      supabase.from("jobs").select("title, id").eq("id", jobId).single(),
+      supabase
+        .from("culture_content")
+        .select("content")
+        .eq("section_key", "notification_settings")
+        .maybeSingle(),
+    ]);
 
-    const confirmation = applicationConfirmationEmail({
-      candidateName: parsed.data.full_name,
-      jobTitle,
-      siteUrl,
-    });
-    void sendEmail({
-      to: parsed.data.email,
-      subject: confirmation.subject,
-      html: confirmation.html,
-    });
+    const jobTitle = jobResult.data?.title ?? "a vaga";
+    const notifSettings = (notifSettingsResult.data?.content ?? {}) as {
+      rh_email?: string;
+      notify_candidate_on_apply?: boolean;
+      notify_rh_on_apply?: boolean;
+    };
 
-    if (RH_EMAIL) {
+    const notifyCandidate = notifSettings.notify_candidate_on_apply ?? true;
+    const notifyRh = notifSettings.notify_rh_on_apply ?? true;
+    const rhEmailAddress = notifSettings.rh_email || RH_EMAIL;
+
+    if (notifyCandidate) {
+      const confirmation = applicationConfirmationEmail({
+        candidateName: parsed.data.full_name,
+        jobTitle,
+        siteUrl,
+      });
+      void sendEmail({
+        to: parsed.data.email,
+        subject: confirmation.subject,
+        html: confirmation.html,
+      });
+    }
+
+    if (notifyRh && rhEmailAddress) {
       const rhMail = rhNewApplicationEmail({
         candidateName: parsed.data.full_name,
         candidateEmail: parsed.data.email,
@@ -156,7 +192,7 @@ export async function POST(request: Request) {
         adminUrl: `${siteUrl}/admin/vagas/${jobId}/candidaturas`,
       });
       void sendEmail({
-        to: RH_EMAIL,
+        to: rhEmailAddress,
         subject: rhMail.subject,
         html: rhMail.html,
         replyTo: parsed.data.email,

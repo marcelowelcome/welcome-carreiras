@@ -38,7 +38,10 @@ export async function GET(request: NextRequest) {
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      return NextResponse.redirect(`${origin}${next}`);
+      // SEC-004: validar o parâmetro next para evitar open redirect
+      const safePath =
+        next.startsWith("/") && !next.includes("://") ? next : "/admin";
+      return NextResponse.redirect(`${origin}${safePath}`);
     }
     console.error("[auth/callback] Erro ao trocar code:", error);
   }

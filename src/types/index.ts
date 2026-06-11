@@ -2,7 +2,7 @@
 // Enums (espelham os tipos do PostgreSQL)
 // ==========================================
 
-export type Brand = "welcome_weddings" | "welcome_trips" | "welconnect" | "corporativo";
+export type Brand = "welcome_weddings" | "welcome_trips" | "welcome_group" | "corporativo";
 
 export type Department =
   | "marketing"

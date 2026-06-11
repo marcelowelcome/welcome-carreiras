@@ -15,7 +15,7 @@ export const contentType = "image/png";
 const BRAND_COLORS: Record<Brand, string> = {
   welcome_trips: "#0091B3",
   welcome_weddings: "#C4A882",
-  welconnect: "#5B9A6B",
+  welcome_group: "#5B9A6B",
   corporativo: "#1A1A2E",
 };
 

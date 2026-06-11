@@ -8,6 +8,7 @@ type RequestType = "exclusao" | "acesso";
 export function LgpdRequestForm() {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMsg, setErrorMsg] = useState<string>("");
+  const [protocolId, setProtocolId] = useState<string>("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -21,20 +22,32 @@ export function LgpdRequestForm() {
       reason: (formData.get("reason") as string) || undefined,
     };
 
-    const res = await fetch("/api/lgpd/requests", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    try {
+      const res = await fetch("/api/lgpd/requests", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
 
-    if (!res.ok) {
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setErrorMsg(body.error ?? "Erro ao enviar. Tente novamente.");
+        setStatus("error");
+        return;
+      }
+
       const body = await res.json().catch(() => ({}));
-      setErrorMsg(body.error ?? "Erro ao enviar. Tente novamente.");
-      setStatus("error");
-      return;
-    }
+      if (body.id) {
+        setProtocolId(String(body.id));
+      }
 
-    setStatus("success");
+      setStatus("success");
+    } catch {
+      setErrorMsg(
+        "Não foi possível conectar ao servidor. Verifique sua conexão e tente novamente."
+      );
+      setStatus("error");
+    }
   }
 
   if (status === "success") {
@@ -48,6 +61,11 @@ export function LgpdRequestForm() {
           Entraremos em contato pelo e-mail informado em até 15 dias úteis
           para confirmar sua identidade e atender o pedido.
         </p>
+        {protocolId && (
+          <p className="mt-4 rounded-wt-sm bg-wt-primary-light px-4 py-2 text-sm font-semibold text-wt-teal-deep">
+            Número de protocolo: {protocolId}
+          </p>
+        )}
       </div>
     );
   }
@@ -133,7 +151,7 @@ export function LgpdRequestForm() {
       </div>
 
       {errorMsg && (
-        <p className="rounded-wt-sm bg-red-50 p-3 text-sm text-wt-red">
+        <p role="alert" className="rounded-wt-sm bg-red-50 p-3 text-sm text-wt-red">
           {errorMsg}
         </p>
       )}

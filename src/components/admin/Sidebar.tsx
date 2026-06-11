@@ -29,6 +29,7 @@ export function Sidebar() {
   const router = useRouter();
 
   async function handleLogout() {
+    if (!window.confirm("Deseja realmente sair do painel administrativo?")) return;
     const supabase = createBrowserClient();
     await supabase.auth.signOut();
     router.push("/admin/login");
@@ -36,7 +37,10 @@ export function Sidebar() {
   }
 
   return (
-    <aside className="flex h-screen w-64 flex-col border-r border-wt-gray-300/60 bg-white">
+    <aside
+      aria-label="Navegação administrativa"
+      className="flex h-screen w-64 flex-col border-r border-wt-gray-300/60 bg-white"
+    >
       {/* Header */}
       <div className="flex items-center justify-between border-b border-wt-gray-300/60 px-5 py-5">
         <Link
@@ -48,7 +52,7 @@ export function Sidebar() {
         <Link
           href="/"
           className="text-wt-gray-500 transition-colors hover:text-wt-primary"
-          title="Ver site público"
+          aria-label="Ver site público"
         >
           <ChevronLeft className="h-5 w-5" />
         </Link>
@@ -66,6 +70,7 @@ export function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
+              aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex items-center gap-3 rounded-wt-sm px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
@@ -85,6 +90,7 @@ export function Sidebar() {
         <button
           type="button"
           onClick={handleLogout}
+          aria-label="Sair do painel administrativo"
           className="flex w-full items-center gap-3 rounded-wt-sm px-3 py-2.5 text-sm font-medium text-wt-gray-700 transition-colors hover:bg-wt-gray-100 hover:text-wt-red"
         >
           <LogOut className="h-5 w-5" />

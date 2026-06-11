@@ -129,8 +129,12 @@ export default async function VagaPage({ params }: PageProps) {
         {/* Conteúdo */}
         <div className="mt-10 space-y-10">
           <Section title="Sobre a vaga" html={job.description} />
-          <Section title="Responsabilidades" html={job.responsibilities} />
-          <Section title="Requisitos obrigatórios" html={job.requirements_must} />
+          {job.responsibilities && (
+            <Section title="Responsabilidades" html={job.responsibilities} />
+          )}
+          {job.requirements_must && (
+            <Section title="Requisitos obrigatórios" html={job.requirements_must} />
+          )}
           {job.requirements_nice && (
             <Section title="Diferenciais" html={job.requirements_nice} />
           )}

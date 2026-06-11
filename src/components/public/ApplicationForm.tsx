@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { Send, Loader2, CheckCircle2, Upload } from "lucide-react";
+import { useRef, useState } from "react";
+import Link from "next/link";
+import { Send, Loader2, CheckCircle2, Upload, ArrowRight } from "lucide-react";
 import { applicationSchema } from "@/lib/validators";
 import { REFERRAL_SOURCE_LABELS, LGPD_CONSENT_TEXT, MAX_RESUME_SIZE, ALLOWED_RESUME_TYPES } from "@/lib/constants";
 import type { ReferralSource } from "@/types";
@@ -21,6 +22,7 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [fileName, setFileName] = useState<string>("");
+  const errorRef = useRef<HTMLDivElement>(null);
 
   if (status === "success") {
     return (
@@ -33,12 +35,28 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
           Recebemos sua candidatura para {jobTitle}. Acompanhe seu e-mail para
           atualizações sobre o processo seletivo.
         </p>
+        <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+          <Link
+            href="/vagas"
+            className="inline-flex items-center gap-2 rounded-wt-sm bg-wt-orange px-6 py-3 font-wt-heading text-sm font-bold uppercase tracking-[0.05em] text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-wt-orange/90 hover:shadow-wt-md"
+          >
+            Ver outras vagas
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 rounded-wt-sm border border-wt-gray-300 bg-white px-6 py-3 font-wt-heading text-sm font-bold uppercase tracking-[0.05em] text-wt-teal-deep transition-all duration-300 hover:-translate-y-0.5 hover:border-wt-primary hover:text-wt-primary hover:shadow-wt-sm"
+          >
+            Voltar para a home
+          </Link>
+        </div>
       </div>
     );
   }
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setStatus("idle");
     setErrors({});
 
     const formData = new FormData(e.currentTarget);
@@ -64,20 +82,24 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
         }
       }
       setErrors(fieldErrors);
+      setTimeout(() => errorRef.current?.focus(), 0);
       return;
     }
 
     const resume = formData.get("resume") as File;
     if (!resume || resume.size === 0) {
       setErrors({ resume: "Currículo é obrigatório" });
+      setTimeout(() => errorRef.current?.focus(), 0);
       return;
     }
     if (!ALLOWED_RESUME_TYPES.includes(resume.type)) {
       setErrors({ resume: "Apenas arquivos PDF" });
+      setTimeout(() => errorRef.current?.focus(), 0);
       return;
     }
     if (resume.size > MAX_RESUME_SIZE) {
       setErrors({ resume: "Arquivo deve ter no máximo 5MB" });
+      setTimeout(() => errorRef.current?.focus(), 0);
       return;
     }
 
@@ -106,6 +128,7 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
     } catch {
       setStatus("error");
       setErrors({ form: "Erro ao enviar candidatura. Tente novamente." });
+      setTimeout(() => errorRef.current?.focus(), 0);
     }
   }
 
@@ -116,7 +139,13 @@ export function ApplicationForm({ jobId, jobTitle }: ApplicationFormProps) {
       </h2>
 
       {errors.form && (
-        <div className="rounded-wt-sm bg-wt-red/10 p-4 text-sm text-wt-red">
+        <div
+          ref={errorRef}
+          role="alert"
+          aria-live="assertive"
+          tabIndex={-1}
+          className="rounded-wt-sm bg-wt-red/10 p-4 text-sm text-wt-red outline-none"
+        >
           {errors.form}
         </div>
       )}

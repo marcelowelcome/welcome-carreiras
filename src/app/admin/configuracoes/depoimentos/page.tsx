@@ -6,10 +6,17 @@ export const dynamic = "force-dynamic";
 
 export default async function DepoimentosAdminPage() {
   const supabase = createServiceRoleClient();
-  const { data } = await supabase
-    .from("testimonials")
-    .select("*")
-    .order("sort_order");
+
+  const [{ data: testimonials }, { data: sectionSetting }] = await Promise.all([
+    supabase.from("testimonials").select("*").order("sort_order"),
+    supabase
+      .from("culture_content")
+      .select("is_visible")
+      .eq("section_key", "testimonials_section")
+      .maybeSingle(),
+  ]);
+
+  const sectionVisible = sectionSetting?.is_visible ?? true;
 
   return (
     <div>
@@ -17,11 +24,14 @@ export default async function DepoimentosAdminPage() {
         Depoimentos
       </h1>
       <p className="mt-1 text-sm text-wt-gray-500">
-        Gerencie os depoimentos exibidos nas páginas de carreiras e cultura
+        Gerencie os depoimentos de colaboradores exibidos no site
       </p>
 
       <div className="mt-8">
-        <TestimonialsAdmin testimonials={(data ?? []) as Testimonial[]} />
+        <TestimonialsAdmin
+          testimonials={(testimonials ?? []) as Testimonial[]}
+          sectionVisible={sectionVisible}
+        />
       </div>
     </div>
   );

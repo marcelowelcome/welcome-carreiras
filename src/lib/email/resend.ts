@@ -5,6 +5,14 @@ export const FROM_EMAIL =
 export const RH_EMAIL =
   process.env.RESEND_RH_EMAIL || process.env.RH_NOTIFY_EMAIL || "";
 
+// SEC-012: alertar no início se o e-mail de notificações do RH não estiver configurado
+if (!RH_EMAIL) {
+  console.error(
+    "[email] CRÍTICO: RESEND_RH_EMAIL não está configurado — " +
+      "notificações de novas candidaturas para o RH estão desativadas."
+  );
+}
+
 let client: Resend | null = null;
 
 function getClient(): Resend | null {

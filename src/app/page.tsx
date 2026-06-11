@@ -4,25 +4,30 @@ import { HeroSection } from "@/components/public/HeroSection";
 import { CountersStrip } from "@/components/public/CountersStrip";
 import { ManifestoSection } from "@/components/public/ManifestoSection";
 import { VerticalsCards } from "@/components/public/VerticalsCards";
+import { PurposeSection } from "@/components/public/PurposeSection";
 import { BenefitsCarousel } from "@/components/public/BenefitsCarousel";
 import { VideoSection } from "@/components/public/VideoSection";
 import { JobCard } from "@/components/public/JobCard";
 import { TestimonialCarousel } from "@/components/public/TestimonialCarousel";
 import { createServerClient } from "@/lib/supabase/server";
+import { createServiceRoleClient } from "@/lib/supabase/admin";
 import { FEATURED_JOBS_LIMIT } from "@/lib/constants";
-import type { Job, Testimonial } from "@/types";
+import type { Job, Testimonial, CultureContent } from "@/types";
 
 export const revalidate = 300; // ISR: 5 min
 
 export default async function Home() {
   const supabase = await createServerClient();
 
-  const [jobsResult, testimonialsResult] = await Promise.all([
+  const adminSupabase = createServiceRoleClient();
+
+  const [jobsResult, testimonialsResult, cultureResult] = await Promise.all([
     supabase
       .from("jobs")
       .select("*")
       .eq("status", "published")
       .eq("is_featured", true)
+      .or("closes_at.is.null,closes_at.gt.now()")
       .order("published_at", { ascending: false })
       .limit(FEATURED_JOBS_LIMIT),
     supabase
@@ -31,14 +36,42 @@ export default async function Home() {
       .eq("is_visible", true)
       .eq("is_featured", true)
       .order("sort_order"),
+    adminSupabase.from("culture_content").select("section_key,content,is_visible"),
   ]);
+
+  const hasDataError = jobsResult.error || testimonialsResult.error || cultureResult.error;
 
   const featuredJobs = (jobsResult.data ?? []) as Job[];
   const testimonials = (testimonialsResult.data ?? []) as Testimonial[];
+  const cultureSections = (cultureResult.data ?? []) as Pick<
+    CultureContent,
+    "section_key" | "content" | "is_visible"
+  >[];
+
+  const showTestimonials =
+    cultureSections.find((s) => s.section_key === "testimonials_section")?.is_visible ?? true;
+
+  const benefitsSection = cultureSections.find(
+    (s) => s.section_key === "benefits" && s.is_visible
+  );
+  const benefitCategories = (
+    benefitsSection?.content as {
+      categories?: { icon: string; title: string; items: string[] }[];
+    }
+  )?.categories;
 
   return (
     <>
+      {hasDataError && (
+        <div
+          role="alert"
+          className="bg-wt-red/10 px-6 py-4 text-center text-sm text-wt-red"
+        >
+          Não foi possível carregar algumas informações da página. Tente recarregar.
+        </div>
+      )}
       <HeroSection />
+      <PurposeSection />
       <CountersStrip />
       <ManifestoSection />
       <VerticalsCards />
@@ -83,9 +116,9 @@ export default async function Home() {
         </section>
       )}
 
-      <BenefitsCarousel />
+      <BenefitsCarousel benefitCategories={benefitCategories} />
 
-      {testimonials.length > 0 && (
+      {showTestimonials && testimonials.length > 0 && (
         <TestimonialCarousel testimonials={testimonials} />
       )}
 

@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Save, Loader2, Plus, Trash2 } from "lucide-react";
-import { createBrowserClient } from "@/lib/supabase/client";
 import type { CultureContent } from "@/types";
 
 interface CultureEditorProps {
@@ -33,19 +32,36 @@ export function CultureEditor({ sections }: CultureEditorProps) {
 function useSaveSection() {
   const router = useRouter();
   const [saving, setSaving] = useState(false);
+  const [error, setSaveError] = useState<string | null>(null);
+  const [success, setSaveSuccess] = useState(false);
+
+  // Auto-dismiss success after 3 seconds
+  useEffect(() => {
+    if (!success) return;
+    const t = setTimeout(() => setSaveSuccess(false), 3000);
+    return () => clearTimeout(t);
+  }, [success]);
 
   async function save(id: string, updates: { title?: string; content?: Record<string, unknown>; is_visible?: boolean }) {
     setSaving(true);
-    const supabase = createBrowserClient();
-    await supabase
-      .from("culture_content")
-      .update({ ...updates, updated_at: new Date().toISOString() })
-      .eq("id", id);
+    setSaveError(null);
+    setSaveSuccess(false);
+    const res = await fetch(`/api/admin/culture/${id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updates),
+    });
     setSaving(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
+      setSaveError(body.error ?? "Erro ao salvar");
+      return;
+    }
+    setSaveSuccess(true);
     router.refresh();
   }
 
-  return { saving, save };
+  return { saving, save, error, success };
 }
 
 // ==========================================
@@ -53,14 +69,20 @@ function useSaveSection() {
 // ==========================================
 
 function ManifestoEditor({ section }: { section: CultureContent }) {
-  const { saving, save } = useSaveSection();
+  const { saving, save, error, success } = useSaveSection();
   const content = section.content as { text?: string };
   const [title, setTitle] = useState(section.title);
   const [text, setText] = useState(content.text ?? "");
   const [visible, setVisible] = useState(section.is_visible);
+  const [dirty, setDirty] = useState(false);
+
+  function markDirty() {
+    setDirty(true);
+  }
 
   function handleSave() {
     save(section.id, { title, content: { text }, is_visible: visible });
+    setDirty(false);
   }
 
   return (
@@ -68,12 +90,15 @@ function ManifestoEditor({ section }: { section: CultureContent }) {
       label="Manifesto"
       description="Texto principal exibido no topo da página de cultura"
       saving={saving}
+      saveError={error}
+      saveSuccess={success}
+      dirty={dirty}
       visible={visible}
-      onVisibilityChange={setVisible}
+      onVisibilityChange={(v) => { setVisible(v); markDirty(); }}
       onSave={handleSave}
     >
-      <Field label="Título" value={title} onChange={setTitle} />
-      <TextArea label="Texto do manifesto" value={text} onChange={setText} rows={5} />
+      <Field label="Título" value={title} onChange={(v) => { setTitle(v); markDirty(); }} />
+      <TextArea label="Texto do manifesto" value={text} onChange={(v) => { setText(v); markDirty(); }} rows={5} />
     </SectionCard>
   );
 }
@@ -102,26 +127,36 @@ const ICON_OPTIONS = [
 ];
 
 function ValuesEditor({ section }: { section: CultureContent }) {
-  const { saving, save } = useSaveSection();
+  const { saving, save, error, success } = useSaveSection();
   const content = section.content as { items?: ValueItem[] };
   const [title, setTitle] = useState(section.title);
   const [items, setItems] = useState<ValueItem[]>(content.items ?? []);
   const [visible, setVisible] = useState(section.is_visible);
+  const [dirty, setDirty] = useState(false);
+
+  function markDirty() {
+    setDirty(true);
+  }
 
   function addItem() {
     setItems([...items, { icon: "heart", title: "", description: "" }]);
+    markDirty();
   }
 
   function updateItem(index: number, field: keyof ValueItem, value: string) {
     setItems(items.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
+    markDirty();
   }
 
   function removeItem(index: number) {
+    if (!confirm("Remover este valor? Esta ação não pode ser desfeita.")) return;
     setItems(items.filter((_, i) => i !== index));
+    markDirty();
   }
 
   function handleSave() {
     save(section.id, { title, content: { items }, is_visible: visible });
+    setDirty(false);
   }
 
   return (
@@ -129,11 +164,14 @@ function ValuesEditor({ section }: { section: CultureContent }) {
       label="Valores"
       description="Valores exibidos em cards na página de cultura"
       saving={saving}
+      saveError={error}
+      saveSuccess={success}
+      dirty={dirty}
       visible={visible}
-      onVisibilityChange={setVisible}
+      onVisibilityChange={(v) => { setVisible(v); markDirty(); }}
       onSave={handleSave}
     >
-      <Field label="Título da seção" value={title} onChange={setTitle} />
+      <Field label="Título da seção" value={title} onChange={(v) => { setTitle(v); markDirty(); }} />
 
       <div className="space-y-3">
         {items.map((item, i) => (
@@ -165,7 +203,12 @@ function ValuesEditor({ section }: { section: CultureContent }) {
                 className="w-full rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
             </div>
-            <button type="button" onClick={() => removeItem(i)} className="self-start text-muted hover:text-error">
+            <button
+              type="button"
+              onClick={() => removeItem(i)}
+              className="self-start text-muted hover:text-error"
+              aria-label="Remover valor"
+            >
               <Trash2 className="h-4 w-4" />
             </button>
           </div>
@@ -206,22 +249,36 @@ const BENEFIT_ICON_OPTIONS = [
 ];
 
 function BenefitsEditor({ section }: { section: CultureContent }) {
-  const { saving, save } = useSaveSection();
+  const { saving, save, error, success } = useSaveSection();
   const content = section.content as { categories?: BenefitCategory[] };
   const [title, setTitle] = useState(section.title);
   const [categories, setCategories] = useState<BenefitCategory[]>(content.categories ?? []);
   const [visible, setVisible] = useState(section.is_visible);
+  const [dirty, setDirty] = useState(false);
+
+  function markDirty() {
+    setDirty(true);
+  }
 
   function addCategory() {
     setCategories([...categories, { icon: "gift", title: "", items: [""] }]);
+    markDirty();
   }
 
   function updateCategory(index: number, field: "icon" | "title", value: string) {
     setCategories(categories.map((cat, i) => (i === index ? { ...cat, [field]: value } : cat)));
+    markDirty();
   }
 
   function removeCategory(index: number) {
+    const cat = categories[index];
+    const itemCount = cat.items.filter(Boolean).length;
+    const msg = itemCount > 0
+      ? `Remover a categoria "${cat.title || "sem título"}" com ${itemCount} item(ns)? Esta ação não pode ser desfeita.`
+      : `Remover a categoria "${cat.title || "sem título"}"?`;
+    if (!confirm(msg)) return;
     setCategories(categories.filter((_, i) => i !== index));
+    markDirty();
   }
 
   function updateItem(catIndex: number, itemIndex: number, value: string) {
@@ -230,22 +287,27 @@ function BenefitsEditor({ section }: { section: CultureContent }) {
         ? { ...cat, items: cat.items.map((item, ii) => (ii === itemIndex ? value : item)) }
         : cat
     ));
+    markDirty();
   }
 
   function addItem(catIndex: number) {
     setCategories(categories.map((cat, ci) =>
       ci === catIndex ? { ...cat, items: [...cat.items, ""] } : cat
     ));
+    markDirty();
   }
 
   function removeItem(catIndex: number, itemIndex: number) {
+    if (!confirm("Remover este item do benefício?")) return;
     setCategories(categories.map((cat, ci) =>
       ci === catIndex ? { ...cat, items: cat.items.filter((_, ii) => ii !== itemIndex) } : cat
     ));
+    markDirty();
   }
 
   function handleSave() {
     save(section.id, { title, content: { categories }, is_visible: visible });
+    setDirty(false);
   }
 
   return (
@@ -253,11 +315,14 @@ function BenefitsEditor({ section }: { section: CultureContent }) {
       label="Benefícios"
       description="Categorias de benefícios com listas de itens"
       saving={saving}
+      saveError={error}
+      saveSuccess={success}
+      dirty={dirty}
       visible={visible}
-      onVisibilityChange={setVisible}
+      onVisibilityChange={(v) => { setVisible(v); markDirty(); }}
       onSave={handleSave}
     >
-      <Field label="Título da seção" value={title} onChange={setTitle} />
+      <Field label="Título da seção" value={title} onChange={(v) => { setTitle(v); markDirty(); }} />
 
       <div className="space-y-4">
         {categories.map((cat, ci) => (
@@ -279,7 +344,12 @@ function BenefitsEditor({ section }: { section: CultureContent }) {
                 placeholder="Nome da categoria"
                 className="flex-1 rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
               />
-              <button type="button" onClick={() => removeCategory(ci)} className="text-muted hover:text-error">
+              <button
+                type="button"
+                onClick={() => removeCategory(ci)}
+                className="text-muted hover:text-error"
+                aria-label="Remover categoria"
+              >
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
@@ -295,7 +365,12 @@ function BenefitsEditor({ section }: { section: CultureContent }) {
                     placeholder="Item do beneficio"
                     className="flex-1 rounded border border-border px-3 py-1.5 text-sm focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent"
                   />
-                  <button type="button" onClick={() => removeItem(ci, ii)} className="text-muted hover:text-error">
+                  <button
+                    type="button"
+                    onClick={() => removeItem(ci, ii)}
+                    className="text-muted hover:text-error"
+                    aria-label="Remover item"
+                  >
                     <Trash2 className="h-3.5 w-3.5" />
                   </button>
                 </div>
@@ -329,27 +404,36 @@ function BenefitsEditor({ section }: { section: CultureContent }) {
 // ==========================================
 
 function DeiEditor({ section }: { section: CultureContent }) {
-  const { saving, save } = useSaveSection();
+  const { saving, save, error, success } = useSaveSection();
   const content = section.content as { text?: string };
   const [title, setTitle] = useState(section.title);
   const [text, setText] = useState(content.text ?? "");
   const [visible, setVisible] = useState(section.is_visible);
+  const [dirty, setDirty] = useState(false);
+
+  function markDirty() {
+    setDirty(true);
+  }
 
   function handleSave() {
     save(section.id, { title, content: { text }, is_visible: visible });
+    setDirty(false);
   }
 
   return (
     <SectionCard
-      label="Diversidade e Inclusao"
+      label="Diversidade e Inclusão"
       description="Texto sobre DEI exibido no final da página de cultura"
       saving={saving}
+      saveError={error}
+      saveSuccess={success}
+      dirty={dirty}
       visible={visible}
-      onVisibilityChange={setVisible}
+      onVisibilityChange={(v) => { setVisible(v); markDirty(); }}
       onSave={handleSave}
     >
-      <Field label="Título" value={title} onChange={setTitle} />
-      <TextArea label="Texto" value={text} onChange={setText} rows={4} />
+      <Field label="Título" value={title} onChange={(v) => { setTitle(v); markDirty(); }} />
+      <TextArea label="Texto" value={text} onChange={(v) => { setText(v); markDirty(); }} rows={4} />
     </SectionCard>
   );
 }
@@ -362,6 +446,9 @@ function SectionCard({
   label,
   description,
   saving,
+  saveError,
+  saveSuccess,
+  dirty,
   visible,
   onVisibilityChange,
   onSave,
@@ -370,6 +457,9 @@ function SectionCard({
   label: string;
   description: string;
   saving: boolean;
+  saveError?: string | null;
+  saveSuccess?: boolean;
+  dirty?: boolean;
   visible: boolean;
   onVisibilityChange: (v: boolean) => void;
   onSave: () => void;
@@ -378,9 +468,15 @@ function SectionCard({
   return (
     <div className="rounded-xl border border-border bg-white p-6 shadow-sm">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-2">
           <h2 className="text-lg font-semibold text-primary">{label}</h2>
-          <p className="text-xs text-muted">{description}</p>
+          {dirty && (
+            <span
+              className="inline-block h-2 w-2 rounded-full bg-amber-400"
+              title="Alterações não salvas"
+              aria-label="Alterações não salvas"
+            />
+          )}
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input
@@ -389,13 +485,14 @@ function SectionCard({
             onChange={(e) => onVisibilityChange(e.target.checked)}
             className="h-4 w-4 rounded border-gray-300 text-accent focus:ring-accent"
           />
-          Visivel no site
+          Visível no site
         </label>
       </div>
+      <p className="text-xs text-muted">{description}</p>
 
       <div className="mt-5 space-y-4">{children}</div>
 
-      <div className="mt-5 border-t border-border pt-4">
+      <div className="mt-5 border-t border-border pt-4 flex items-center gap-4">
         <button
           type="button"
           onClick={onSave}
@@ -403,8 +500,10 @@ function SectionCard({
           className="inline-flex items-center gap-2 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-50"
         >
           {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-          Salvar alteracoes
+          Salvar alterações
         </button>
+        {saveError && <p role="alert" className="text-xs text-error">{saveError}</p>}
+        {saveSuccess && <p role="status" className="text-xs text-green-700">Alterações salvas com sucesso.</p>}
       </div>
     </div>
   );

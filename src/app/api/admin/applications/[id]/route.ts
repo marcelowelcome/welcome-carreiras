@@ -15,6 +15,21 @@ export async function PATCH(request: Request, { params }: Ctx) {
     score?: number | null;
   };
 
+  // RN-008: validar score — deve ser número entre 1 e 5 inclusive
+  if (body.score !== undefined && body.score !== null) {
+    if (
+      typeof body.score !== "number" ||
+      !Number.isFinite(body.score) ||
+      body.score < 1 ||
+      body.score > 5
+    ) {
+      return NextResponse.json(
+        { error: "score deve ser um número entre 1 e 5" },
+        { status: 400 }
+      );
+    }
+  }
+
   const supabase = createServiceRoleClient();
 
   // Busca estágio atual se for mudar stage (pra registrar history)
@@ -46,7 +61,7 @@ export async function PATCH(request: Request, { params }: Ctx) {
   const { error } = await supabase.from("applications").update(patch).eq("id", id);
   if (error) {
     console.error("[API] update application:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Erro ao atualizar candidatura" }, { status: 500 });
   }
 
   // Log history se houve mudança de etapa

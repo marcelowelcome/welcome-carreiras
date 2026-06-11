@@ -18,8 +18,8 @@ import type {
 export const BRAND_LABELS: Record<Brand, string> = {
   welcome_weddings: "Welcome Weddings",
   welcome_trips: "Welcome Trips",
-  welconnect: "WelConnect",
-  corporativo: "Corporativo",
+  welcome_group: "Welcome Group",
+  corporativo: "Welcome Group",
 };
 
 export const DEPARTMENT_LABELS: Record<Department, string> = {
@@ -88,10 +88,10 @@ export const BRAND_COLORS: Record<Brand, { bg: string; text: string; badge: stri
     text: "text-trips-dark",
     badge: "bg-trips-light text-trips-dark",
   },
-  welconnect: {
-    bg: "bg-welconnect",
-    text: "text-welconnect-dark",
-    badge: "bg-welconnect-light text-welconnect-dark",
+  welcome_group: {
+    bg: "bg-welcome-group",
+    text: "text-welcome-group-dark",
+    badge: "bg-welcome-group-light text-welcome-group-dark",
   },
   corporativo: {
     bg: "bg-corporativo",
@@ -107,7 +107,7 @@ export const BRAND_COLORS: Record<Brand, { bg: string; text: string; badge: stri
 export const BRAND_ICONS: Record<Brand, string> = {
   welcome_weddings: "heart",
   welcome_trips: "plane",
-  welconnect: "users",
+  welcome_group: "users",
   corporativo: "building-2",
 };
 
@@ -116,18 +116,18 @@ export const BRAND_ICONS: Record<Brand, string> = {
 // ==========================================
 
 export const JOB_STATUS_COLORS: Record<JobStatus, string> = {
-  draft: "bg-gray-100 text-gray-700",
-  published: "bg-green-100 text-green-700",
-  paused: "bg-yellow-100 text-yellow-700",
+  draft: "bg-wt-gray-100 text-wt-gray-700",
+  published: "bg-wt-primary-light text-wt-primary-dark",
+  paused: "bg-wt-yellow/20 text-wt-gray-700",
   closed: "bg-red-100 text-red-700",
 };
 
 export const APPLICATION_STAGE_COLORS: Record<ApplicationStage, string> = {
-  inscrito: "bg-blue-100 text-blue-700",
-  triagem: "bg-purple-100 text-purple-700",
-  entrevista: "bg-indigo-100 text-indigo-700",
-  desafio: "bg-orange-100 text-orange-700",
-  proposta: "bg-emerald-100 text-emerald-700",
+  inscrito: "bg-wt-primary-light text-wt-primary-dark",
+  triagem: "bg-wt-teal-deep/10 text-wt-teal-deep",
+  entrevista: "bg-wt-teal-mid/15 text-wt-teal-deep",
+  desafio: "bg-wt-orange/15 text-wt-gray-700",
+  proposta: "bg-wt-yellow/20 text-wt-gray-700",
   contratado: "bg-green-100 text-green-700",
   reprovado: "bg-red-100 text-red-700",
 };

@@ -31,6 +31,12 @@ export function useCountUp({
     const el = ref.current;
     if (!el) return;
 
+    // Respect user's motion preference — skip animation and show final value immediately
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setValue(prefix + target.toFixed(decimals) + suffix);
+      return;
+    }
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {

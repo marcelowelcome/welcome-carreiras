@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Star, FileText, X } from "lucide-react";
 import { cn, formatDate } from "@/lib/utils";
 import {
@@ -21,6 +21,9 @@ interface CandidateDrawerProps {
   onUpdate?: () => void;
 }
 
+const FOCUSABLE_SELECTOR =
+  'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
 export function CandidateDrawer({
   application,
   open,
@@ -30,6 +33,10 @@ export function CandidateDrawer({
   const [notes, setNotes] = useState(application.notes ?? "");
   const [score, setScore] = useState(application.score ?? 0);
   const [saving, setSaving] = useState(false);
+  const [notesError, setNotesError] = useState<string | null>(null);
+
+  const [moveError, setMoveError] = useState<string | null>(null);
+  const [moveSuccess, setMoveSuccess] = useState<string | null>(null);
 
   // Avaliações por etapa
   const [evaluations, setEvaluations] = useState<StageEvaluation[]>([]);
@@ -38,6 +45,8 @@ export function CandidateDrawer({
   const [evalNotes, setEvalNotes] = useState("");
   const [savingEval, setSavingEval] = useState(false);
 
+  const drawerRef = useRef<HTMLDivElement>(null);
+
   // Sincroniza ao reabrir com outro candidato
   useEffect(() => {
     setNotes(application.notes ?? "");
@@ -45,6 +54,9 @@ export function CandidateDrawer({
     setEvalStage(application.stage);
     setEvalNotes("");
     setEvalScore(0);
+    setMoveError(null);
+    setMoveSuccess(null);
+    setNotesError(null);
   }, [application.id, application.notes, application.score, application.stage]);
 
   useEffect(() => {
@@ -57,24 +69,95 @@ export function CandidateDrawer({
       .catch(() => setEvaluations([]));
   }, [open, application.id]);
 
+  // UX-033: focus trap and Escape key handler
+  useEffect(() => {
+    if (!open) return;
+
+    // Focus first focusable element on open
+    const drawer = drawerRef.current;
+    if (drawer) {
+      const focusable = drawer.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR);
+      if (focusable.length > 0) focusable[0].focus();
+    }
+
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key === "Tab" && drawerRef.current) {
+        const focusable = Array.from(
+          drawerRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)
+        ).filter((el) => !el.hasAttribute("disabled"));
+
+        if (focusable.length === 0) return;
+
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [open, onClose]);
+
+  // Auto-dismiss success toast
+  useEffect(() => {
+    if (!moveSuccess) return;
+    const t = setTimeout(() => setMoveSuccess(null), 3000);
+    return () => clearTimeout(t);
+  }, [moveSuccess]);
+
   async function saveNotes() {
     setSaving(true);
-    await fetch(`/api/admin/applications/${application.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ notes, score: score || null }),
-    });
-    setSaving(false);
+    setNotesError(null);
+    try {
+      const res = await fetch(`/api/admin/applications/${application.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ notes, score: score || null }),
+      });
+      if (!res.ok) {
+        setNotesError("Falha ao salvar notas. Tente novamente.");
+      }
+    } catch {
+      setNotesError("Erro de rede ao salvar notas.");
+    } finally {
+      setSaving(false);
+    }
   }
 
   async function moveToStage(newStage: ApplicationStage) {
-    await fetch(`/api/admin/applications/${application.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ stage: newStage }),
-    });
-    onClose();
-    onUpdate?.();
+    setMoveError(null);
+    try {
+      const res = await fetch(`/api/admin/applications/${application.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ stage: newStage }),
+      });
+      if (!res.ok) {
+        setMoveError("Falha ao mover para a etapa selecionada. Tente novamente.");
+        return;
+      }
+      setMoveSuccess(`Candidato movido para ${APPLICATION_STAGE_LABELS[newStage]}.`);
+      onUpdate?.();
+      onClose();
+    } catch {
+      setMoveError("Erro de rede ao mover candidato.");
+    }
   }
 
   async function submitEvaluation() {
@@ -106,19 +189,29 @@ export function CandidateDrawer({
   return (
     <div className="fixed inset-0 z-50 flex justify-end">
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
-      <div className="relative w-full max-w-md overflow-y-auto bg-wt-off-white shadow-wt-lg">
+      <div
+        ref={drawerRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="drawer-title"
+        className="relative w-full max-w-md overflow-y-auto bg-wt-off-white shadow-wt-lg"
+      >
         <div className="sticky top-0 z-10 flex items-center justify-between border-b border-wt-gray-300/60 bg-wt-off-white px-6 py-4">
           <div>
             <p className="font-wt-heading text-xs font-semibold uppercase tracking-[0.15em] text-wt-primary">
               Candidato · {APPLICATION_STAGE_LABELS[application.stage]}
             </p>
-            <h3 className="mt-1 font-wt-heading text-lg font-bold text-wt-teal-deep">
+            <h3
+              id="drawer-title"
+              className="mt-1 font-wt-heading text-lg font-bold text-wt-teal-deep"
+            >
               {application.full_name}
             </h3>
           </div>
           <button
             type="button"
             onClick={onClose}
+            aria-label="Fechar painel"
             className="text-wt-gray-500 hover:text-wt-teal-deep"
           >
             <X className="h-5 w-5" />
@@ -243,6 +336,9 @@ export function CandidateDrawer({
             {saving && (
               <p className="mt-1 text-xs text-wt-gray-500">Salvando...</p>
             )}
+            {notesError && (
+              <p role="alert" className="mt-1 text-xs text-red-600">{notesError}</p>
+            )}
           </div>
 
           {/* Entrevistas estruturadas (Bar Raiser + pares + painel) */}
@@ -352,6 +448,14 @@ export function CandidateDrawer({
             <p className="font-wt-heading text-xs font-bold uppercase tracking-[0.12em] text-wt-primary">
               Mover para etapa
             </p>
+
+            {moveError && (
+              <p role="alert" className="mt-2 text-xs text-red-600">{moveError}</p>
+            )}
+            {moveSuccess && (
+              <p role="status" className="mt-2 text-xs text-green-700">{moveSuccess}</p>
+            )}
+
             <div className="mt-3 flex flex-wrap gap-2">
               {APPLICATION_STAGES_ORDER.filter(
                 (s) => s !== application.stage

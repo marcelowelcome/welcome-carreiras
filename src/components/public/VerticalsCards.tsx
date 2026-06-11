@@ -7,9 +7,10 @@ interface Vertical {
   brandParam: string;
   name: string;
   logo: string;
+  logoSize?: number; // rendered px (width = height for square logos)
   description: string;
-  accent: string; // text color class
-  border: string; // hover border class
+  accent: string;
+  border: string;
 }
 
 const VERTICALS: Vertical[] = [
@@ -39,9 +40,20 @@ const VERTICALS: Vertical[] = [
     name: "Welcome Corp",
     logo: "/imagens/LP_LogoCorp.png",
     description:
-      "Time corporativo: marketing, tecnologia, financeiro e operações que sustentam o grupo inteiro.",
+      "Eventos corporativos e de networking que conectam líderes e constroem comunidades ao redor do mundo.",
     accent: "text-wt-teal-deep",
     border: "hover:border-wt-teal-deep",
+  },
+  {
+    slug: "group",
+    brandParam: "welcome_group",
+    name: "Welcome Group",
+    logo: "/imagens/LP_LogoGroup.png",
+    logoSize: 120,
+    description:
+      "Serviços compartilhados que sustentam todas as marcas: financeiro, marketing, RH, customer success e muito mais.",
+    accent: "text-wt-teal-mid",
+    border: "hover:border-wt-teal-mid",
   },
 ];
 
@@ -57,24 +69,23 @@ export function VerticalsCards() {
             Escolha o time que combina com você
           </h2>
           <p className="mt-4 text-base leading-relaxed text-wt-gray-700">
-            Três marcas complementares, uma cultura só. Veja as oportunidades
-            de cada uma.
+            Quatro frentes, uma cultura só. Veja as oportunidades de cada uma.
           </p>
         </div>
 
-        <div className="mt-14 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="mt-14 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
           {VERTICALS.map((v) => (
             <Link
               key={v.slug}
               href={`/vagas?marca=${v.brandParam}`}
               className={`group flex flex-col rounded-wt-md border-2 border-transparent bg-white p-8 shadow-wt-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-wt-lg ${v.border}`}
             >
-              <div className="flex h-20 items-center">
+              <div className={`flex items-center ${v.logoSize ? "h-28" : "h-20"}`}>
                 <Image
                   src={v.logo}
                   alt={v.name}
-                  width={180}
-                  height={90}
+                  width={v.logoSize ?? 180}
+                  height={v.logoSize ?? 90}
                   className="max-h-full w-auto object-contain"
                 />
               </div>

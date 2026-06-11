@@ -67,7 +67,7 @@ export function JobCard({ job, showBrand = true }: JobCardProps) {
           <span />
         )}
         <span className="inline-flex items-center gap-2 font-wt-heading text-xs font-bold uppercase tracking-[0.1em] text-wt-gray-700 transition-colors group-hover:text-wt-primary">
-          Explore
+          Ver vaga
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
         </span>
       </div>

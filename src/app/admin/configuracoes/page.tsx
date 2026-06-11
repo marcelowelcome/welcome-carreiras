@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, MessageSquareQuote } from "lucide-react";
+import { FileText, MessageSquareQuote, Bell } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -15,6 +15,12 @@ const SECTIONS = [
     icon: MessageSquareQuote,
     title: "Depoimentos",
     description: "Gerencie os depoimentos de colaboradores exibidos no site",
+  },
+  {
+    href: "/admin/configuracoes/notificacoes",
+    icon: Bell,
+    title: "Notificações",
+    description: "Configure e-mails automáticos para candidatos e alertas para o RH",
   },
 ];
 

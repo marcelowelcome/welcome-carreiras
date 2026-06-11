@@ -34,7 +34,11 @@ export function TestimonialCarousel({ testimonials }: TestimonialCarouselProps) 
         </div>
 
         <div className="relative mx-auto mt-12 max-w-3xl">
-          <div className="rounded-wt-lg bg-white p-8 shadow-wt-sm sm:p-12">
+          <div
+            className="rounded-wt-lg bg-white p-8 shadow-wt-sm sm:p-12"
+            aria-live="polite"
+            aria-atomic="true"
+          >
             <Quote className="h-10 w-10 text-wt-primary/30" />
 
             <blockquote className="mt-4 font-wt-body text-lg leading-relaxed text-wt-gray-700 sm:text-xl">
@@ -82,6 +86,7 @@ export function TestimonialCarousel({ testimonials }: TestimonialCarouselProps) 
                     key={i}
                     type="button"
                     onClick={() => goTo(i)}
+                    aria-pressed={i === current}
                     className={cn(
                       "h-2.5 w-2.5 rounded-full transition-colors",
                       i === current ? "bg-wt-primary" : "bg-wt-gray-300"

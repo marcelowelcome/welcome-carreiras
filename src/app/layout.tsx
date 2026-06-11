@@ -14,7 +14,7 @@ const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
   display: "swap",
   variable: "--font-nunito-sans",
-  weight: ["300", "400", "600", "700"],
+  weight: ["300", "400", "600", "700", "800", "900"],
   style: ["normal"],
   adjustFontFallback: false,
 });

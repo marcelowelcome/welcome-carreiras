@@ -20,7 +20,7 @@ const config: Config = {
           light: "#E6F5F9",
           dark: "#007A99",
         },
-        welconnect: {
+        "welcome-group": {
           DEFAULT: "#5B9A6B",
           light: "#E8F5EC",
           dark: "#3A6B47",
@@ -85,6 +85,12 @@ const config: Config = {
       },
       animation: {
         marquee: "marquee 40s linear infinite",
+      },
+      transitionDelay: {
+        "wt-1": "150ms",
+        "wt-2": "300ms",
+        "wt-3": "400ms",
+        "wt-4": "500ms",
       },
     },
   },
