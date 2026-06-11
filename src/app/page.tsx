@@ -1,7 +1,8 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { HeroSection } from "@/components/public/HeroSection";
-import { CountersStrip } from "@/components/public/CountersStrip";
+import { CountersStrip, DEFAULT_STATS } from "@/components/public/CountersStrip";
+import type { Stat } from "@/components/public/CountersStrip";
 import { ManifestoSection } from "@/components/public/ManifestoSection";
 import { VerticalsCards } from "@/components/public/VerticalsCards";
 import { PurposeSection } from "@/components/public/PurposeSection";
@@ -39,6 +40,12 @@ export default async function Home() {
     adminSupabase.from("culture_content").select("section_key,content,is_visible"),
   ]);
 
+  const companyStatsRow = (cultureResult.data ?? []).find(
+    (s) => s.section_key === "company_stats"
+  );
+  const companyStats: Stat[] =
+    (companyStatsRow?.content as { stats?: Stat[] })?.stats ?? DEFAULT_STATS;
+
   const hasDataError = jobsResult.error || testimonialsResult.error || cultureResult.error;
 
   const featuredJobs = (jobsResult.data ?? []) as Job[];
@@ -72,7 +79,7 @@ export default async function Home() {
       )}
       <HeroSection />
       <PurposeSection />
-      <CountersStrip />
+      <CountersStrip stats={companyStats} />
       <ManifestoSection />
       <VerticalsCards />
 

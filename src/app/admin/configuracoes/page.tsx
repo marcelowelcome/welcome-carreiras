@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FileText, MessageSquareQuote, Bell } from "lucide-react";
+import { FileText, MessageSquareQuote, Bell, BarChart2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -21,6 +21,12 @@ const SECTIONS = [
     icon: Bell,
     title: "Notificações",
     description: "Configure e-mails automáticos para candidatos e alertas para o RH",
+  },
+  {
+    href: "/admin/configuracoes/estatisticas",
+    icon: BarChart2,
+    title: "Estatísticas da empresa",
+    description: "Números exibidos na seção de contadores da página inicial",
   },
 ];
 

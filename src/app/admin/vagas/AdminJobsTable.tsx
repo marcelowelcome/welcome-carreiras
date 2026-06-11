@@ -18,6 +18,7 @@ interface JobRow {
   title: string;
   brand: string;
   status: string;
+  closes_at: string | null;
   created_at: string;
   published_at: string | null;
   applications_count: number;
@@ -110,15 +111,24 @@ export function AdminJobsTable({ jobs }: AdminJobsTableProps) {
       header: "Status",
       render: (job) => {
         const status = job.status as keyof typeof JOB_STATUS_LABELS;
+        const isExpired =
+          !!job.closes_at && new Date(job.closes_at) < new Date();
         return (
-          <span
-            className={cn(
-              "inline-block rounded-full px-2.5 py-0.5 text-xs font-medium",
-              JOB_STATUS_COLORS[status]
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span
+              className={cn(
+                "inline-block rounded-full px-2.5 py-0.5 text-xs font-medium",
+                JOB_STATUS_COLORS[status]
+              )}
+            >
+              {JOB_STATUS_LABELS[status]}
+            </span>
+            {isExpired && (
+              <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-medium text-amber-700">
+                Expirada
+              </span>
             )}
-          >
-            {JOB_STATUS_LABELS[status]}
-          </span>
+          </div>
         );
       },
     },

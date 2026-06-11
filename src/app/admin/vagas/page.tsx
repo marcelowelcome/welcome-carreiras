@@ -20,6 +20,19 @@ export default async function AdminVagasPage() {
   if (countsResult.error) console.error("[admin/vagas] counts:", countsResult.error);
 
   const rawJobs = (jobsResult.data ?? []) as Job[];
+
+  // RN-011: auto-encerrar vagas publicadas com closes_at no passado
+  const now = new Date().toISOString();
+  const expiredIds = rawJobs
+    .filter((j) => j.status === "published" && j.closes_at && j.closes_at < now)
+    .map((j) => j.id);
+  if (expiredIds.length > 0) {
+    await supabase.from("jobs").update({ status: "paused" }).in("id", expiredIds);
+    for (const job of rawJobs) {
+      if (expiredIds.includes(job.id)) job.status = "paused";
+    }
+  }
+
   const applications = countsResult.data ?? [];
 
   // Conta candidaturas por job_id

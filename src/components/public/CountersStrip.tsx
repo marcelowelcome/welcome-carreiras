@@ -2,27 +2,30 @@
 
 import { useCountUp } from "@/hooks/useCountUp";
 
-interface Stat {
+export interface Stat {
   target: number;
   suffix?: string;
   prefix?: string;
   label: string;
 }
 
-// TODO: substituir por números reais (RH) na Sprint 3
-const STATS: Stat[] = [
+export const DEFAULT_STATS: Stat[] = [
   { target: 50, suffix: "+", label: "Colaboradores" },
   { target: 20, suffix: "+", label: "Anos de história" },
   { target: 30, suffix: "+", label: "Destinos" },
   { target: 200, suffix: "+", label: "Eventos realizados" },
 ];
 
-export function CountersStrip() {
+interface CountersStripProps {
+  stats?: Stat[];
+}
+
+export function CountersStrip({ stats = DEFAULT_STATS }: CountersStripProps) {
   return (
     <section className="bg-wt-gray-100/60 py-20 sm:py-24">
       <div className="mx-auto max-w-wt-container px-6">
         <div className="grid grid-cols-2 gap-10 lg:grid-cols-4">
-          {STATS.map((stat) => (
+          {stats.map((stat) => (
             <Counter key={stat.label} stat={stat} />
           ))}
         </div>
