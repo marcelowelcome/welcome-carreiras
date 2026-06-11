@@ -150,28 +150,30 @@ export default async function CulturaPage() {
         <div className="pointer-events-none absolute -bottom-40 -left-32 h-[32rem] w-[32rem] rounded-full bg-wt-yellow/10 blur-3xl" />
 
         <div className="relative mx-auto max-w-3xl px-6 text-center">
-          <p className="font-wt-heading text-xs font-semibold uppercase tracking-[0.25em] text-wt-primary">
+          <h1 className="font-wt-heading text-5xl font-black leading-[1.05] tracking-tight text-wt-primary sm:text-6xl lg:text-7xl">
             #BeWelcome
-          </p>
-          <h1 className="mt-6 font-wt-heading text-4xl font-black leading-[1.05] tracking-tight text-wt-teal-deep sm:text-5xl lg:text-6xl">
+          </h1>
+          <p className="mt-6 font-wt-heading text-xl font-bold tracking-tight text-wt-teal-deep sm:text-2xl">
             {manifesto?.title ?? (
               <>
                 Nossos princípios não são palavras —{" "}
                 <span className="text-wt-primary">são ações</span>.
               </>
             )}
-          </h1>
+          </p>
           {manifestoText ? (
-            <p className="mt-8 text-lg leading-relaxed text-wt-gray-700">{manifestoText}</p>
+            <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-wt-gray-700">
+              {manifestoText}
+            </p>
           ) : (
             <>
-              <p className="mt-8 text-lg leading-relaxed text-wt-gray-700">
+              <p className="mx-auto mt-6 max-w-2xl text-base leading-relaxed text-wt-gray-700">
                 Chamamos nossos princípios de{" "}
                 <strong className="text-wt-teal-deep">BeWelcome</strong> — como um verbo, um
                 sentimento de pertencimento, uma atitude ativa e constante de viver o nosso
                 propósito: criar experiências e transformar pessoas.
               </p>
-              <p className="mt-4 text-base leading-relaxed text-wt-gray-700">
+              <p className="mx-auto mt-4 max-w-2xl text-sm leading-relaxed text-wt-gray-700">
                 Seja ao planejar projetos inovadores, tomar decisões estratégicas ou enfrentar
                 desafios, os Princípios BeWelcome estão no centro de tudo o que fazemos. É isso
                 que nos torna únicos. É isso que nos faz ser{" "}
